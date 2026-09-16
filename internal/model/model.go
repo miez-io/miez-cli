@@ -61,12 +61,13 @@ type MCPServer struct {
 // meaningful for kind: agent workers. Tools references ids declared in the
 // owning team's MCP list.
 type Worker struct {
-	ID     string   `yaml:"id"`
-	Kind   string   `yaml:"kind"`
-	Path   string   `yaml:"path"`
-	Model  string   `yaml:"model,omitempty"`
-	Skills []string `yaml:"skills,omitempty"`
-	Tools  []string `yaml:"tools,omitempty"`
+	ID          string   `yaml:"id"`
+	Kind        string   `yaml:"kind"`
+	Path        string   `yaml:"path"`
+	Description string   `yaml:"description,omitempty"`
+	Model       string   `yaml:"model,omitempty"`
+	Skills      []string `yaml:"skills,omitempty"`
+	Tools       []string `yaml:"tools,omitempty"`
 }
 
 // EffectiveModel resolves the model id an agent worker uses: a workspace

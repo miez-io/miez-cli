@@ -15,6 +15,7 @@ import (
 	"github.com/manuel/miez-cli/internal/model"
 	"github.com/manuel/miez-cli/internal/validate"
 	"github.com/manuel/miez-cli/internal/workspace"
+	"gopkg.in/yaml.v3"
 )
 
 // Target is the only render target this phase supports.
@@ -72,18 +73,24 @@ func Build(workspaceValue workspace.Workspace, team artifacts.TeamDir, state mod
 		if len(effectiveSkills) > 0 {
 			body += renderSkillLinks(worker, effectiveSkills)
 		}
+		modelName := ""
 		if worker.Kind == model.WorkerAgent {
 			modelID := worker.EffectiveModel(state, team.Team.DefaultModel)
 			option, ok := model.FindModel(team.Team, modelID)
 			if !ok {
 				return Plan{}, fmt.Errorf("worker %q: unsupported model %q; choose one of: %s", worker.ID, modelID, strings.Join(model.ModelIDs(team.Team), ", "))
 			}
-			modelName, err := option.NameFor()
+			resolvedModelName, err := option.NameFor()
 			if err != nil {
 				return Plan{}, fmt.Errorf("worker %q: %w", worker.ID, err)
 			}
-			body = fmt.Sprintf("---\nmodel: %s\n---\n\n%s", modelName, body)
+			modelName = resolvedModelName
 		}
+		frontmatter, err := renderWorkerFrontmatter(worker.Description, modelName)
+		if err != nil {
+			return Plan{}, fmt.Errorf("worker %q: %w", worker.ID, err)
+		}
+		body = frontmatter + body
 		if err := addFile(files, workerPath(worker), []byte(body+"\n")); err != nil {
 			return Plan{}, err
 		}
@@ -349,6 +356,23 @@ func workerPath(worker model.Worker) string {
 		return filepath.ToSlash(filepath.Join(".github", "agents", id+".md"))
 	}
 	return filepath.ToSlash(filepath.Join(".github", "prompts", id+".prompt.md"))
+}
+
+func renderWorkerFrontmatter(description, modelName string) (string, error) {
+	if description == "" && modelName == "" {
+		return "", nil
+	}
+	data, err := yaml.Marshal(struct {
+		Model       string `yaml:"model,omitempty"`
+		Description string `yaml:"description,omitempty"`
+	}{
+		Model:       modelName,
+		Description: description,
+	})
+	if err != nil {
+		return "", fmt.Errorf("encode worker frontmatter: %w", err)
+	}
+	return fmt.Sprintf("---\n%s---\n\n", data), nil
 }
 
 func workflowPath() string {

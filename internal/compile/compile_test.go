@@ -35,6 +35,9 @@ func TestBuildRendersCopilotOutputAndLinkedSkills(t *testing.T) {
 		t.Fatal("missing Copilot prompt")
 	}
 	workerOutput := string(plan.Files[".github/prompts/builder.prompt.md"])
+	if !strings.HasPrefix(workerOutput, "---\ndescription: Builds implementation prompts.\n---\n\n") {
+		t.Fatalf("prompt description frontmatter = %q", workerOutput)
+	}
 	if !strings.Contains(workerOutput, "## Skills") {
 		t.Fatal("skills section is missing")
 	}
@@ -230,8 +233,11 @@ func TestBuildRendersAgentModelFrontmatter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(string(plan.Files[".github/agents/architect.md"]), "---\nmodel: Claude Sonnet 4.5 (copilot)\n---\n\n") {
+	if !strings.HasPrefix(string(plan.Files[".github/agents/architect.md"]), "---\nmodel: Claude Sonnet 4.5 (copilot)\ndescription: Designs system architecture.\n---\n\n") {
 		t.Fatalf("agent frontmatter = %q", plan.Files[".github/agents/architect.md"])
+	}
+	if !strings.Contains(string(plan.Files[".github/agents/architect.md"]), "description: Designs system architecture.\n") {
+		t.Fatal("agent description is missing")
 	}
 }
 
@@ -304,7 +310,7 @@ func TestBuildHonorsWorkerModelStateOverride(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(string(plan.Files[".github/agents/architect.md"]), "---\nmodel: GPT-5.1 (copilot)\n---\n\n") {
+	if !strings.HasPrefix(string(plan.Files[".github/agents/architect.md"]), "---\nmodel: GPT-5.1 (copilot)\ndescription: Designs system architecture.\n---\n\n") {
 		t.Fatalf("agent frontmatter = %q, want the state override to win over the generated index's model", plan.Files[".github/agents/architect.md"])
 	}
 }
@@ -394,6 +400,7 @@ workers:
     model: %s
 workflows: [{id: default, name: Default, path: workflows/default.md, phases: [{id: build, workers: [architect]}]}]
 `, modelID)
+	manifest = strings.Replace(manifest, "    path: commands/architect.md\n", "    path: commands/architect.md\n    description: Designs system architecture.\n", 1)
 	if err := os.WriteFile(filepath.Join(root, artifacts.TeamIndexFileName), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -430,6 +437,7 @@ workers:
     skills: []
 workflows: [{id: default, name: Default, path: workflows/default.md, phases: [{id: build, workers: [builder]}]}]
 `
+	manifest = strings.Replace(manifest, "    path: commands/builder.md\n", "    path: commands/builder.md\n    description: Builds implementation prompts.\n", 1)
 	if err := os.WriteFile(filepath.Join(root, artifacts.TeamIndexFileName), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}

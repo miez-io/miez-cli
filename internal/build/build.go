@@ -174,12 +174,13 @@ func loadWorkers(root string) ([]model.Worker, error) {
 		}
 		seen[id] = struct{}{}
 		workers = append(workers, model.Worker{
-			ID:     id,
-			Kind:   frontmatter.Kind,
-			Path:   path,
-			Model:  frontmatter.Model,
-			Skills: append([]string{}, frontmatter.Skills...),
-			Tools:  append([]string{}, frontmatter.Tools...),
+			ID:          id,
+			Kind:        frontmatter.Kind,
+			Path:        path,
+			Description: frontmatter.Description,
+			Model:       frontmatter.Model,
+			Skills:      append([]string{}, frontmatter.Skills...),
+			Tools:       append([]string{}, frontmatter.Tools...),
 		})
 	}
 	sort.Slice(workers, func(left, right int) bool { return workers[left].ID < workers[right].ID })

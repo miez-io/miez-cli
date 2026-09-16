@@ -26,6 +26,9 @@ func TestBuildGeneratesDeterministicCatalogFromFrontmatter(t *testing.T) {
 	if !strings.HasPrefix(string(first.Data), artifacts.GeneratedTeamIndexHeader) {
 		t.Fatal("generated index is missing its do-not-edit header")
 	}
+	if first.Team.Workers[0].Description != "Builds implementation prompts." {
+		t.Fatalf("worker description = %q", first.Team.Workers[0].Description)
+	}
 	if first.Team.Workers[0].Skills[0] != "writing" {
 		t.Fatalf("worker skills = %#v", first.Team.Workers[0].Skills)
 	}
@@ -34,6 +37,9 @@ func TestBuildGeneratesDeterministicCatalogFromFrontmatter(t *testing.T) {
 	}
 	if !strings.Contains(string(first.Data), "path: workflows/default.md") {
 		t.Fatal("generated catalog omitted workflow path")
+	}
+	if !strings.Contains(string(first.Data), "description: Builds implementation prompts.") {
+		t.Fatal("generated catalog omitted worker description")
 	}
 
 	if err := Apply(root, first); err != nil {
@@ -112,7 +118,7 @@ func writePackage(t *testing.T) string {
 	root := t.TempDir()
 	files := map[string]string{
 		"miez.yaml":               "id: demo-team\nversion: 1.0.0\nname: Demo team\nauthor: tests\n",
-		"workers/builder.md":      "---\nkind: command\nskills: [writing]\n---\n# Builder\n",
+		"workers/builder.md":      "---\nkind: command\ndescription: Builds implementation prompts.\nskills: [writing]\n---\n# Builder\n",
 		"skills/writing/SKILL.md": "---\n---\n# Writing\n",
 		"workflows/default.md":    "---\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n",
 	}
