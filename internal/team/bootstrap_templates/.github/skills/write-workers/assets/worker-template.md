@@ -1,5 +1,4 @@
 ---
-id: replace-me
 name: Worker Name
 description: One-sentence description of this worker's responsibility.
 kind: command
@@ -9,7 +8,8 @@ kind: command
 
 You are **Worker Name**, a [role] who [distinctive contribution].
 
-`kind` is required and must be `command` (a manually invoked Copilot prompt)
+The file name `workers/<worker-id>.md` is the worker id — there is no `id`
+frontmatter field. `kind` is required and must be `command` (a manually invoked Copilot prompt)
 or `agent` (a persistent Copilot custom agent). Only `kind: agent` may also
 set `model: <model-id>`, naming an id declared in `miez.yaml`'s `models:` list
 or a miez built-in id. `name` and `description` are optional and accepted, but

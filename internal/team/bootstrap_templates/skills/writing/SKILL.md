@@ -1,5 +1,5 @@
 ---
-id: writing
+description: Describe the reusable capability this skill provides.
 ---
 # Writing
 

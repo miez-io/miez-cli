@@ -1,5 +1,4 @@
 ---
-id: starter
 kind: command
 skills: [writing]
 ---

@@ -1,5 +1,4 @@
 ---
-id: default
 name: Default
 phases:
   - id: work

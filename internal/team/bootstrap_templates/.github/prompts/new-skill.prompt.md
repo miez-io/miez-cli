@@ -3,8 +3,8 @@ description: "Add a reusable skill to this miez team package."
 argument-hint: What repeatable capability should this skill describe?
 ---
 
-Add exactly one skill at `skills/<skill-id>/SKILL.md`, with `id` matching the
-folder name. That is the only required frontmatter.
+Add exactly one skill at `skills/<skill-id>/SKILL.md`. The folder name is the
+skill id; do not declare `id` in frontmatter.
 
 A skill is deliberately less structured than a worker: there is no mandatory
 section list. Give it whatever shape the capability actually needs — a short

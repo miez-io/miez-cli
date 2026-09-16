@@ -20,7 +20,6 @@ Common `miez team build .` failures, their cause, and the fix.
 | `required artifact directory … is missing` | `workers/`, `skills/`, or `workflows/` absent | create it |
 | `team package must contain at least one workflow Markdown file` | no workflow | add `workflows/<id>.md` |
 | `skill … must use skills/<skill-id>/SKILL.md` | skill nested too deep or too shallow | move to exactly that path |
-| `skill … directory must match id "…"` | folder name ≠ frontmatter `id` | rename one to match |
 | `artifact path … must not be a symlink` | symlinked artifact | replace with a real file |
 
 ## Frontmatter
@@ -28,7 +27,8 @@ Common `miez team build .` failures, their cause, and the fix.
 | Message | Cause | Fix |
 |---|---|---|
 | `missing YAML frontmatter` / `unterminated YAML frontmatter` | no `---` block or unclosed | wrap frontmatter in `---` fences |
-| `frontmatter requires a non-empty id` | missing `id` | add a kebab-case `id` |
+| `frontmatter field "id" is not allowed` | leftover `id` from an older package | delete the line; the id comes from the file path |
+| `file name implies id "…", want "…"` | generated catalog disagrees with the file layout | re-run `miez team build .`; never hand-edit the generated file |
 | `invalid frontmatter: field … not found` | unknown key on a worker or workflow — both are strict | remove the key; only documented fields are allowed |
 | `duplicate worker id` / `duplicate skill id` / `duplicate workflow id` | two artifacts share an id | make ids unique |
 | `kind "…" must be agent or command` | invalid or missing `kind` | use `command` or `agent` |

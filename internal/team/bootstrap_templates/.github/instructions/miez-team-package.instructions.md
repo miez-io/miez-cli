@@ -35,11 +35,12 @@ authoring this package, use `miez team build .`.
 
 ## Frontmatter schemas
 
-Worker frontmatter is strict — an unknown field fails the build.
+Worker frontmatter is strict — an unknown field fails the build. The worker
+id is the file name (`workers/architect.md` becomes `architect`); `id` is not
+a frontmatter field.
 
 ```yaml
 ---
-id: architect        # required, kebab-case, unique
 kind: agent          # required: command | agent
 model: gpt-5         # agent only; never on a command worker
 skills: [architecture]  # optional; ids that exist under skills/
@@ -49,11 +50,10 @@ description: ...     # optional, human-readable only
 ---
 ```
 
-Workflow frontmatter is strict:
+Workflow frontmatter is strict; the workflow id is the file name:
 
 ```yaml
 ---
-id: default          # required, kebab-case, unique
 name: Default        # required, non-empty
 description: ...     # optional
 phases:              # required, at least one
@@ -62,12 +62,12 @@ phases:              # required, at least one
 ---
 ```
 
-Skill frontmatter only requires `id`, matching its directory name. Extra
-fields are tolerated:
+A skill's id is its directory name. SKILL.md frontmatter needs no `id`; extra
+fields like `description` are tolerated:
 
 ```yaml
 ---
-id: architecture
+description: ...
 ---
 ```
 
@@ -78,8 +78,8 @@ id: architecture
   or notes in those folders.
 - A skill must sit exactly at `skills/<skill-id>/SKILL.md`. Other files under
   a skill folder (`assets/`, `references/`) are ignored by the build.
-- Every markdown artifact needs a non-empty `id`, and a worker's or workflow's
-  `id` must match how it is indexed.
+- Never declare `id` in artifact frontmatter — worker, skill, and workflow
+  ids are derived from the file path, and a stray `id` field fails the build.
 - `skills:` and `tools:` must reference things that already exist.
 - An agent's model must resolve in the merged catalog: built-ins are `gpt-5`
   (default), `gpt-5.1`, `claude-sonnet-4.5`, `claude-opus-4.5`, `gemini-3-pro`.

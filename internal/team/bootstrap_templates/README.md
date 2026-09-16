@@ -37,11 +37,12 @@ and is not added to `miez.generated.yaml`.
 
 ## Workers
 
-Every worker needs an `id` and a `kind`. The only valid kinds are:
+Every worker needs a `kind`. The only valid kinds are:
 
 - `command`: a manually invoked Copilot prompt.
 - `agent`: a persistent Copilot custom agent.
 
+The worker id is the file name: `workers/architect.md` becomes `architect`.
 Only an `agent` worker may set `model`. A worker can assign reusable skills with
 `skills: [skill-id]` and may reference declared MCP servers with `tools:
 [mcp-id]`.
@@ -54,7 +55,6 @@ Example:
 
 ```markdown
 ---
-id: architect
 kind: agent
 model: gpt-5
 skills: [architecture]
@@ -66,11 +66,13 @@ Describe the worker's durable persona and decision posture.
 
 ## Skills and workflows
 
-A skill is reusable and independent of a worker persona. Its frontmatter needs
-an `id` matching its directory name. Assign it from worker frontmatter or with
+A skill is reusable and independent of a worker persona. Its id is its
+directory name (`skills/<skill-id>/SKILL.md`); do not declare `id` in
+frontmatter. Assign it from worker frontmatter or with
 the local `miez worker skill add` command after installation.
 
-A workflow frontmatter declares `id`, `name`, and ordered `phases`. Every phase
+A workflow's id is its file name; its frontmatter declares `name` and ordered
+`phases`. Every phase
 lists existing worker ids. Workflow membership belongs only in the workflow;
 do not put routing or handoff choreography in a worker or skill.
 
@@ -107,8 +109,8 @@ a worker, skill, or workflow and never appears in `miez.generated.yaml`.
 | `skills/review-team-package/` | Pre-publish review, with a build-error reference. |
 
 Workers follow a strict template because their body is rendered straight into a
-Copilot prompt or agent. Skills are intentionally loose: only an `id` matching
-the folder name is required.
+Copilot prompt or agent. Skills are intentionally loose: the folder name is the
+id and no frontmatter field is required.
 
 The helpers may edit source files, but `miez.generated.yaml` is always produced
 by `miez team build .`, never by hand.
