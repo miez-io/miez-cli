@@ -59,12 +59,14 @@ func Build(workspaceValue workspace.Workspace, team artifacts.TeamDir, state mod
 		body := markdown.Body
 		effectiveSkills := worker.EffectiveSkills(state)
 		for _, skill := range effectiveSkills {
-			skillMarkdown, err := team.ReadSkill(skill)
+			skillFiles, err := team.ReadSkillFiles(skill)
 			if err != nil {
 				return Plan{}, err
 			}
-			if err := addFile(files, skillPath(skill), []byte(skillMarkdown.Body+"\n")); err != nil {
-				return Plan{}, err
+			for relativePath, data := range skillFiles {
+				if err := addFile(files, skillOutputPath(skill, relativePath), data); err != nil {
+					return Plan{}, err
+				}
 			}
 		}
 		if len(effectiveSkills) > 0 {
@@ -281,7 +283,13 @@ func ManagedPaths(team artifacts.TeamDir, state model.TeamState) ([]string, erro
 		}
 		paths = append(paths, workerPath(worker))
 		for _, skill := range worker.EffectiveSkills(state) {
-			paths = append(paths, skillPath(skill))
+			skillFiles, err := team.ReadSkillFiles(skill)
+			if err != nil {
+				return nil, err
+			}
+			for relativePath := range skillFiles {
+				paths = append(paths, skillOutputPath(skill, relativePath))
+			}
 		}
 	}
 	rules, err := renderRules(team)
@@ -353,8 +361,8 @@ func rulesPath() string {
 	return filepath.ToSlash(filepath.Join(".github", "instructions", "miez-rules.instructions.md"))
 }
 
-func skillPath(skillID string) string {
-	return filepath.ToSlash(filepath.Join(".github", "skills", skillID, "SKILL.md"))
+func skillOutputPath(skillID, relativePath string) string {
+	return filepath.ToSlash(filepath.Join(".github", "skills", skillID, filepath.FromSlash(relativePath)))
 }
 
 func renderSkillLinks(worker model.Worker, skills []string) string {

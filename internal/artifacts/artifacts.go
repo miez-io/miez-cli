@@ -88,6 +88,70 @@ func (team TeamDir) ReadSkill(skillID string) (Markdown, error) {
 	return readMarkdown(team.Root, path, skillID)
 }
 
+// ReadSkillFiles reads the complete skill directory. SKILL.md is returned
+// without frontmatter; supporting files are returned unchanged.
+func (team TeamDir) ReadSkillFiles(skillID string) (map[string][]byte, error) {
+	skill, ok := team.Team.Skill(skillID)
+	if !ok {
+		return nil, fmt.Errorf("skill %q is not declared in %s", skillID, TeamIndexFileName)
+	}
+	cleanPath, err := safeRelativePath(skill.Path)
+	if err != nil {
+		return nil, err
+	}
+	skillRoot := filepath.Join(team.Root, filepath.Dir(filepath.FromSlash(cleanPath)))
+	info, err := os.Lstat(skillRoot)
+	if err != nil {
+		return nil, fmt.Errorf("stat skill %s: %w", skillID, err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() {
+		return nil, fmt.Errorf("skill %s path is not a directory", skillID)
+	}
+
+	markdown, err := team.ReadSkill(skillID)
+	if err != nil {
+		return nil, err
+	}
+	files := map[string][]byte{}
+	err = filepath.WalkDir(skillRoot, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.Type()&os.ModeSymlink != 0 {
+			return fmt.Errorf("skill %q contains unsupported symlink %q", skillID, path)
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		fileInfo, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if !fileInfo.Mode().IsRegular() {
+			return fmt.Errorf("skill %q contains unsupported file %q", skillID, path)
+		}
+		relative, err := filepath.Rel(skillRoot, path)
+		if err != nil {
+			return err
+		}
+		var data []byte
+		if filepath.ToSlash(relative) == "SKILL.md" {
+			data = []byte(markdown.Body + "\n")
+		} else {
+			data, err = os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+		}
+		files[filepath.ToSlash(relative)] = data
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("read skill %s: %w", skillID, err)
+	}
+	return files, nil
+}
+
 // ReadWorkflow reads one workflow Markdown artifact using its generated
 // catalog path and verifies that its frontmatter identity still matches.
 func (team TeamDir) ReadWorkflow(workflow model.Workflow) (Markdown, error) {

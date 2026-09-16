@@ -47,6 +47,12 @@ func TestBuildRendersCopilotOutputAndLinkedSkills(t *testing.T) {
 	if _, ok := plan.Files[".github/skills/extra/SKILL.md"]; !ok {
 		t.Fatal("missing Copilot skill")
 	}
+	if string(plan.Files[".github/skills/extra/assets/template.md"]) != "asset template\n" {
+		t.Fatalf("missing skill asset: %q", plan.Files[".github/skills/extra/assets/template.md"])
+	}
+	if string(plan.Files[".github/skills/extra/references/guide.md"]) != "reference guide\n" {
+		t.Fatalf("missing skill reference: %q", plan.Files[".github/skills/extra/references/guide.md"])
+	}
 	if !strings.Contains(string(plan.Files[".github/instructions/miez-workflow.instructions.md"]), "applyTo: \"**\"") {
 		t.Fatal("workflow instruction is not always-on")
 	}
@@ -56,6 +62,26 @@ func TestBuildRendersCopilotOutputAndLinkedSkills(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(root, ".github", "prompts", "builder.prompt.md")); err != nil {
 		t.Fatal(err)
+	}
+	for relative, expected := range map[string]string{
+		".github/skills/extra/assets/template.md":  "asset template\n",
+		".github/skills/extra/references/guide.md": "reference guide\n",
+	} {
+		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatalf("read installed skill file %s: %v", relative, err)
+		}
+		if string(data) != expected {
+			t.Fatalf("installed skill file %s = %q, want %q", relative, data, expected)
+		}
+	}
+	managedPaths, err := ManagedPaths(team, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !hasPath(managedPaths, ".github/skills/extra/assets/template.md") ||
+		!hasPath(managedPaths, ".github/skills/extra/references/guide.md") {
+		t.Fatalf("managed paths = %#v", managedPaths)
 	}
 }
 
@@ -343,6 +369,15 @@ func TestBuildOmitsRulesWhenTeamDeclaresNone(t *testing.T) {
 	}
 }
 
+func hasPath(paths []string, wanted string) bool {
+	for _, path := range paths {
+		if path == wanted {
+			return true
+		}
+	}
+	return false
+}
+
 func writeCompileAgentTeam(t *testing.T, root, modelID string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Join(root, "commands"), 0o755); err != nil {
@@ -403,6 +438,18 @@ workflows: [{id: default, name: Default, path: workflows/default.md, phases: [{i
 	}
 	if err := os.WriteFile(filepath.Join(root, "skills", "extra", "SKILL.md"), []byte("---\n---\n# Extra\n"), 0o644); err != nil {
 		t.Fatal(err)
+	}
+	for relative, content := range map[string]string{
+		"assets/template.md":  "asset template\n",
+		"references/guide.md": "reference guide\n",
+	} {
+		path := filepath.Join(root, "skills", "extra", filepath.FromSlash(relative))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err := os.MkdirAll(filepath.Join(root, "workflows"), 0o755); err != nil {
 		t.Fatal(err)
