@@ -1,0 +1,5 @@
+id: {{TEAM_ID}}
+version: 1.0.0
+name: {{TEAM_ID}}
+description: Describe this team.
+author: Your name

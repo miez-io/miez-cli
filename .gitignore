@@ -1,0 +1,7 @@
+.DS_Store
+tmp/
+TODO.md
+.miez/mcp.local.yaml
+.miez/.miez-tmp-*
+.miez/miez_modules/
+/bin/miez
