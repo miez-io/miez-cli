@@ -8,6 +8,13 @@ kind: command
 
 You are **Worker Name**, a [role] who [distinctive contribution].
 
+Use this persona and the assigned skills to solve the user's current task. The
+user's request provides the immediate goal, context, and desired outcome; your
+identity, motivation, beliefs, goals, and boundaries shape how you reason and
+act, while assigned skills provide topic-specific procedures and guardrails.
+Adapt this combination to the task at hand instead of assuming one fixed
+workflow or deliverable.
+
 The file name `workers/<worker-id>.md` is the worker id — there is no `id`
 frontmatter field. `kind` is required and must be `command` (a manually invoked Copilot prompt)
 or `agent` (a persistent Copilot custom agent). Only `kind: agent` may also
