@@ -70,11 +70,11 @@ Here is my vision for miez-cli:
 
 ### worker
 
-- The standalone worker command is for assigning skills and capabilities to the worker, and for `kind: agent` workers, for choosing the underlying model
+- The standalone worker command is for assigning skills and capabilities to the worker and choosing the underlying model
 - Allows sub-command `skill add <worker-name> <skill-name>` for assigning a new skill to the worker
 - Allows sub-command `skill remove <worker-name> <skill-name>` for removing a skill from the worker
 - A worker's effective skills are rendered as links to the canonical Copilot skill files, with a generic Skills section directing Copilot to read and follow them. This lets the user customize worker capabilities without duplicating skill bodies in every worker artifact.
-- A worker's `kind` is either `command` (a manually-invoked prompt/command) or `agent` (a persistent custom agent with its own model). Only `kind: agent` workers have a model
+- Every worker is a persistent custom agent with `kind: agent`; prompt-only workers are not supported. Every worker may use a model.
 - Allows sub-command `model list` to show which model ids are usable right now (the active team's resolved catalog, or just the built-in ids if no team is active)
 - Allows sub-command `model set <worker-name> <model-name>` to switch a `kind: agent` worker to a different model at any time, without editing the team's files. Both arguments are shell-tab-completable
 - Workers and teams reference miez's stable model ids, never provider-specific names. The Copilot mapping is resolved when the generated output is rendered, and a missing Copilot mapping fails the build.
@@ -87,7 +87,7 @@ Here is my vision for miez-cli:
 ## Artifacts
 
 - Artifacts are organised by teams
-- The hierarchy is Teams -> Workers -> Workflows
+- The hierarchy is Teams -> Workers/Skills/Tasks -> Workflows
 - The team consists of specialised workers that can be used to build workflows - like a real team, has workers and a manager could use these workers to establish a workflow/process, we use the same paradigm here
 - The artifacts must be a combination of determenistic config files that the CLI can work with and markdown file templates that allow for dynamic injections and configuration by the CLI
 - How these artifacts are than really build, is up to the users
@@ -96,7 +96,8 @@ Here is my vision for miez-cli:
 - The authored package contract is `miez.yaml` plus Markdown artifacts. `miez team build` generates one `miez.generated.yaml` per team, containing:
     - `id`, `version`, `name`, `description`
     - `skills`: each with an `id` and generated source path
-    - `workers`: each with an `id`, a `kind` (`command` or `agent`), a generated path to its Markdown file, optional `skills`, and for `kind: agent` an optional `model` and MCP tools
+    - `workers`: each with an `id`, `kind: agent`, a generated path to its Markdown file, optional `skills`, `model`, and MCP tools
+    - `tasks`: each with an `id`, generated source path, and optional description; tasks render as Copilot prompts
     - `workflows`: each with an `id`, `name`, generated source path, and ordered `phases`, each phase listing the worker ids that participate in it
     - optional `default_model` and `models` (a team-declared list of model ids/mappings, extending or overriding the built-in ones)
     - optional MCP declarations and package metadata copied from `miez.yaml`
@@ -106,13 +107,13 @@ Here is my vision for miez-cli:
 - Decided: miez ships no built-in team in the binary anymore. What used to be "the one predefined team" is now `spec-driven-team`, a normal external GitHub team hosted in the separate `miez-scrum-team` repo - installed like any other via `team install <github-url>`, nothing special about it in the CLI
     - Its authoring files still double as the reference example for what `team bootstrap` scaffolds, and for the shape `miez.generated.yaml` is expected to have
 - This team includes a spec-driven approach similar to OpenSpec
-- It has specialised workers built as commands/prompts
+- It has specialised workers built as persistent Copilot agents and reusable tasks
     - spec-engineer -> for planning and writing detailed specs
         - creates a folder .miez/changes/<change-name>/spec/ for working notes
         - creates .miez/changes/<change-name>/contract.md which defines the change contract and references the living SRS, including operations and intent when/then scenarios
     - architect -> Analyses the code base critically. For each spec, creates technical design decision, asks the user for decisions, document the decisions, documents the technical implementation appraoch with important techncail details
         - create .miez/changes/<change-name>/design.md
-        - currently the one worker set up as `kind: agent` in this team (with its own model), since it benefits most from a stronger/dedicated reasoning model - the rest are `kind: command`
+        - workers are all `kind: agent`; each can use the team's default or its own model
     - plan -> Breaks the architects work into clear tasks
         - create .miez/changes/<change-name>/tasks.md
     - user-story -> Creates Jira compatible user-stories out of the tasks.md

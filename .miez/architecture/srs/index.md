@@ -31,6 +31,7 @@ Use the other architecture documents for different questions:
 | Document | Capability boundary | Primary design |
 |---|---|---|
 | [team-artifacts.md](team-artifacts.md) | Team manifests, Markdown artifacts, validation, and bootstrap. | [Artifact and rendering SDD](../sdd/sdd-artifact-and-rendering.md) |
+| [task-artifacts.md](task-artifacts.md) | Reusable task objectives, task prompts, worker/task composition, and workflow task assignments. | [Task artifacts and invocation SDD](../sdd/sdd-task-artifacts-and-invocation.md) |
 | [workspace-configuration.md](workspace-configuration.md) | Initialization, active-team state, workflow controls, worker overrides, and CLI behavior. | [Workspace and distribution SDD](../sdd/sdd-workspace-and-distribution.md) |
 | [team-distribution.md](team-distribution.md) | GitHub installation, source modules, lockfiles, updates, credentials, and remote references. | [Workspace and distribution SDD](../sdd/sdd-workspace-and-distribution.md) |
 | [team-audit.md](team-audit.md) | Offline source drift detection and CI gating. | [Workspace and distribution SDD](../sdd/sdd-workspace-and-distribution.md) |
@@ -54,6 +55,27 @@ Use the other architecture documents for different questions:
 - `team-authoring/support-files-are-not-operational-artifacts`
 - `team-authoring/installed-source-retains-support-files`
 - `team-authoring/build-produces-installable-package`
+
+### Task artifacts and worker invocation
+
+- `task/domain-roles-are-distinct`
+- `worker/all-workers-render-as-agents`
+- `task/is-a-reusable-work-objective`
+- `task/is-discoverable`
+- `task/catalog-includes-task-relationships`
+- `task/renders-as-a-copilot-prompt`
+- `task/selected-agent-context-is-preserved`
+- `task/user-request-is-task-context`
+- `workflow/agent-delegation-is-explicit`
+- `task/prompt-composition-is-not-nested`
+- `task/workflow-task-assignments-are-valid`
+- `task/prompt-identifiers-are-unique`
+- `task/rendering-is-deterministic`
+- `task/rendering-is-traceable`
+- `task/copilot-is-the-only-render-target`
+- `task/miez-does-not-execute-tasks`
+- `task/agent-invocation-is-select-then-prompt`
+- `task/agent-invocation-is-the-composition-boundary`
 
 ### Workspace configuration
 
@@ -102,7 +124,7 @@ Use the other architecture documents for different questions:
 ### Copilot rendering
 
 - `render-contract/github-copilot-is-the-only-render-target`
-- `render-contract/authored-folders-map-to-fixed-render-kinds`
+- `render-contract/authored-folders-map-to-agents-and-prompts`
 - `render-contract/skills-are-referenced-not-inlined`
 - `render-contract/rules-are-a-separate-always-on-instruction-from-workflow-routing`
 - `render-contract/selected-workflow-is-always-on`

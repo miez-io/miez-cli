@@ -44,16 +44,15 @@ Acceptance:
 - WHEN another target is configured or requested THEN rendering fails instead
   of silently ignoring the target.
 
-#### `render-contract/authored-folders-map-to-fixed-render-kinds`
+#### `render-contract/authored-folders-map-to-agents-and-prompts`
 
-When a valid team is rendered, the system shall map command workers, agent
-workers, skills, and the selected workflow artifact to their defined Copilot
-artifact kinds.
+When a valid team is rendered, the system shall map workers, tasks, skills, and
+the selected workflow artifact to their defined Copilot artifact kinds.
 
 Acceptance:
 
-- WHEN a command worker and an agent worker are rendered THEN each appears in
-  its corresponding Copilot invocation kind.
+- WHEN a worker is rendered THEN it appears as a Copilot custom agent.
+- WHEN a task is rendered THEN it appears as a user-invocable Copilot prompt.
 - WHEN a skill or selected workflow is declared THEN its content appears in the
   corresponding Copilot skill or routing artifact.
 

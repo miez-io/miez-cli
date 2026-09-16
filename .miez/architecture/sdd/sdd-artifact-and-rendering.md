@@ -16,7 +16,7 @@ SRS IDs this design satisfies:
 - `team-authoring/build-produces-installable-package`
 - `check/validates-team-artifacts`
 - `render-contract/github-copilot-is-the-only-render-target`
-- `render-contract/authored-folders-map-to-fixed-render-kinds`
+- `render-contract/authored-folders-map-to-agents-and-prompts`
 - `render-contract/skills-are-referenced-not-inlined`
 - `render-contract/rules-are-a-separate-always-on-instruction-from-workflow-routing`
 - `render-contract/selected-workflow-is-always-on`
@@ -51,11 +51,11 @@ not execute Copilot prompts or workflows.
 
 | Part | Owns |
 |---|---|
-| `internal/model` | YAML-facing `Team`, `Worker`, `TeamState`, MCP, and model catalog types; effective worker skills/models and active workflow identity |
-| `internal/artifacts` | Generated team index decoding, worker/skill/workflow Markdown loading by declared paths, safe relative paths, symlink checks, directory copying, and file walking |
-| `internal/build` | Package metadata and Markdown frontmatter loading, cross-reference validation, deterministic `miez.generated.yaml` generation, and atomic output replacement |
+| `internal/model` | YAML-facing `Team`, `Worker`, `Skill`, `Task`, `Workflow`, `TeamState`, MCP, and model catalog types; effective worker skills/models and active workflow identity |
+| `internal/artifacts` | Generated team index decoding, worker/skill/task/workflow Markdown loading by declared paths, safe relative paths, symlink checks, directory copying, and file walking |
+| `internal/build` | Package metadata and Markdown frontmatter loading, cross-reference validation, deterministic `miez.generated.yaml` generation, and atomic output replacement for all four artifact roles |
 | `internal/validate` | Collection of actionable contract issues across package metadata, generated index identity, references, models, MCP ids, workflow phases, and artifact files |
-| `internal/compile` | Complete render plan, Copilot path mapping, rules/workflow instruction rendering, generated-file collision checks, and staged output transaction |
+| `internal/compile` | Complete render plan, Copilot path mapping, worker/skill/task/workflow rendering, generated-file collision checks, and staged output transaction |
 | `internal/workspace` | `.miez/config.yaml`, repository-local paths, and workspace state used by the compiler |
 | `internal/team` | Coordinates validation, compiler calls, workspace state updates, and lifecycle operations; owns no rendered format details |
 | bootstrap support bundle | README and Copilot authoring helpers shipped with a new team source; it is not an operational catalog entry |
@@ -89,22 +89,26 @@ they remain in `.miez/config.yaml`.
 - `skills[]` entries with id and source path;
 - `workers[]` entries with id, kind, derived source path, optional model,
   skill ids, and MCP tool ids;
+- `tasks[]` entries with id, derived source path, and description;
 - `workflows[]` entries with id, display name, source path, and ordered phases
-  containing worker ids.
+  containing worker ids or explicit worker/task assignments.
 
 The generated index is the only installed team catalog used for workflow,
-worker, skill, model, and MCP completion or validation. It is decoded with YAML
+worker, skill, task, model, and MCP completion or validation. It is decoded with YAML
 known-field checking. Installation does not parse authoring frontmatter to
 reconstruct missing relationships.
 
 ### 3.3 Frontmatter and build inputs
 
-Worker frontmatter declares `id`, `kind`, and optional `skills`, `model`, and
-MCP `tools`. Skill frontmatter declares its `id`. Workflow frontmatter declares
-its `id`, display `name`, and ordered `phases`; each phase declares an id and
-worker ids. Artifact paths are derived from their locations and written into
-the generated index. Markdown bodies remain the authored prompt, persona, or
-coordination content.
+Worker frontmatter declares `kind: agent` and optional `skills`, `model`, and
+MCP `tools`; every worker renders as a Copilot agent. Task frontmatter declares
+an optional `description`; it does not bind the task to a worker. Skill identity
+is derived from its directory.
+Workflow frontmatter declares its display `name` and ordered `phases`; each
+phase may use worker ids or explicit worker/task assignments. Artifact paths
+are derived from their locations and written into the generated index. Markdown
+bodies remain the authored prompt, persona, task objective, or coordination
+content.
 
 The build operation parses every frontmatter block, validates identifiers,
 duplicates, references, model mappings, and safe paths, then emits a sorted,
@@ -113,13 +117,14 @@ unchanged.
 
 ### 3.4 Markdown artifacts
 
-Workers may use any safe relative Markdown path declared in `miez.generated.yaml`.
-Skills use the generated path declared in the skill catalog, normally
-`skills/<skill-id>/SKILL.md`. Build-time parsing validates frontmatter and
-retains the Markdown body. At installation time, operational metadata comes
-only from `miez.generated.yaml`; the body loader may strip the frontmatter block for
-rendering but does not use it to reconstruct ids, skills, models, tools, or
-workflow phases. The loader rejects symlinks and paths outside the team root.
+Workers and tasks may use any safe relative Markdown path declared in
+`miez.generated.yaml`. Skills use the generated path declared in the skill
+catalog, normally `skills/<skill-id>/SKILL.md`. Build-time parsing validates
+frontmatter and retains each Markdown body. At installation time, operational
+metadata comes only from `miez.generated.yaml`; the body loader may strip the
+frontmatter block for rendering but does not use it to reconstruct ids, skills,
+models, tools, or workflow assignments. The loader rejects symlinks
+and paths outside the team root.
 
 ### 3.5 Effective workspace state
 
@@ -141,30 +146,34 @@ For the current Copilot target, the compiler maps effective artifacts to:
 
 | Input | Managed output |
 |---|---|
-| `kind: agent` worker | `.github/agents/<id>.md` with Copilot model frontmatter |
-| `kind: command` worker | `.github/prompts/<id>.prompt.md` |
+| worker agent | `.github/agents/<id>.md` with Copilot model frontmatter |
+| worker-neutral task | `.github/prompts/task-<id>.prompt.md` |
 | effective skill | `.github/skills/<skill-id>/SKILL.md` and a relative Markdown link in each using worker |
 | `rules/*.md` | `.github/instructions/miez-rules.instructions.md` |
 | selected workflow entry and Markdown body | `.github/instructions/miez-workflow.instructions.md` |
 
 The compiler prepends Copilot's always-on `applyTo: "**"` frontmatter to the
 selected workflow body and renders its effective ordered phases after applying
-workspace worker overrides. The managed output transaction derives the old
-and new generated path sets from the previous and next team catalogs plus
-workspace state; it does not persist a compiler manifest or compilation
-summary below `.miez/`.
+workspace worker overrides. A worker-neutral task prompt relies on the
+currently selected agent context. The task contract uses provider-
+supported agent delegation or handoffs for multi-worker workflows and never
+depends on nested slash-prompt invocation. The managed output transaction
+derives the old and new generated path sets from the previous and next team
+catalogs plus workspace state; it does not persist a compiler manifest or
+compilation summary below `.miez/`.
 
 ### 3.7 Bootstrap support bundle
 
 A bootstrapped team source includes a README and a fixed set of Copilot-native
 authoring helpers. The helpers explain and enforce the team authoring boundary:
-worker persona versus reusable skill, workflow registration, valid worker kinds,
-frontmatter, and the distinction between authored metadata and the generated
-team index. The always-on authoring instruction is separate from workflow
-routing, just as operational team rules are separate from workflow routing.
+worker persona versus reusable skill, workflow registration, the target
+agent-only worker contract, frontmatter, and the distinction between authored
+metadata and the generated team index. The always-on authoring instruction is
+separate from workflow routing, just as operational team rules are separate
+from workflow routing.
 
 These support files are package content, not `model.Team` entities. The builder
-does not derive worker, skill, or workflow entries from them, and the generated
+does not derive worker, skill, task, or workflow entries from them, and the generated
 team index does not need a new support-file schema. The installer copies them as
 part of the validated source module, so the README and helpers remain available
 to a team author and are included in the lockfile's regular-file inventory.
@@ -180,8 +189,8 @@ is a separate future capability.
 ### Provided interfaces
 
 - `artifacts.LoadTeam(root)` loads one team manifest.
-- `artifacts.TeamDir.ReadWorker(worker)`, `ReadSkill(skill)`, and
-  `ReadWorkflow(workflow)` load Markdown artifacts using paths from the
+- `artifacts.TeamDir.ReadWorker(worker)`, `ReadSkill(skill)`, `ReadTask(task)`,
+  and `ReadWorkflow(workflow)` load Markdown artifacts using paths from the
   generated index.
 - `build.Build(sourceRoot)` validates package metadata and artifact
   frontmatter, then returns a deterministic generated `miez.generated.yaml` plan.
@@ -218,6 +227,11 @@ index relationships.
 The compiler does not prompt. Interactive decisions and MCP prompting happen
 in the CLI/team service before compilation.
 
+Task-specific catalog and invocation structure is detailed in the [task
+artifacts and invocation SDD](sdd-task-artifacts-and-invocation.md). The
+artifact compiler remains the owner of validation, deterministic output, and
+transactional replacement; task execution remains outside miez.
+
 ## 5. Interaction
 
 ### 5.1 Team build
@@ -230,13 +244,13 @@ sequenceDiagram
 
   CLI->>Builder: build source root
   Builder->>FS: read miez.yaml and artifact frontmatter
-  Builder->>Builder: validate ids, references, models, tools, and phases
+  Builder->>Builder: validate ids, references, models, tools, delegation, and phases
   Builder-->>CLI: generated miez.generated.yaml plan or all issues
   CLI->>FS: atomically write miez.generated.yaml
 ```
 
 The builder never scans frontmatter during installation. It derives paths from
-the `workflows/`, `workers/`, and `skills/` artifact locations, sorts all
+the `workflows/`, `workers/`, `skills/`, and task artifact locations, sorts all
 catalogs and fields deterministically, and refuses to replace an existing
 generated index when validation fails.
 
@@ -285,10 +299,9 @@ effective skill list, and emits each skill file. It then appends one generic
 Each effective skill is listed as a relative Markdown link from the worker
 output, for example `[architecture](../skills/architecture/SKILL.md)`. The
 skill body is emitted only in its canonical `.github/skills/<skill-id>/SKILL.md`
-file and is never copied into the worker. Agent workers additionally resolve
-the effective stable model id through the merged built-in/team catalog and
-prepend its Copilot name as frontmatter. Command workers do not receive model
-frontmatter.
+file and is never copied into the worker. The target worker contract renders
+every worker as a Copilot agent, resolving its effective stable model id through
+the merged built-in/team catalog and prepending its Copilot name as frontmatter.
 
 The merged model catalog is keyed by stable id. Team entries replace built-in
 entries with the same id while preserving catalog order for listing. The CLI
@@ -296,7 +309,28 @@ derives both model listing and model-argument completion from those ids; it
 does not require a display-name field. Copilot rendering resolves the selected
 id to its provider mapping separately.
 
-### 5.4 Workflow selection and rendering
+### 5.4 Task rendering and agent delegation
+
+The compiler reads each task body as a reusable work objective. A base task
+prompt tells the currently selected worker to apply its persona and effective
+skills, then supplies the task body and leaves user-specific context to the
+current Copilot request. It does not copy the worker body or skill bodies into
+the base task prompt.
+
+The task prompt is worker-neutral and runs in the currently selected worker
+agent context. If a provider-specific entry point needs to select an agent
+automatically, the compiler may use the prompt file's supported `agent`
+metadata; it does not nest one prompt invocation inside another. Multi-worker
+workflow automation uses provider-supported agent delegation or handoffs, with
+the workflow identifying valid worker agents and the available delegation
+relationship.
+
+Task-aware workflow phases carry explicit worker/task assignments. The workflow
+instruction can describe how those assignments are ordered, handed off, or
+reviewed, while miez only validates and renders the references. It does not
+execute the assignments or report a phase complete.
+
+### 5.5 Workflow selection and rendering
 
 Workflow completion reads the active team's catalog from its installed source
 and returns sorted ids without contacting GitHub. `workflow use` validates the

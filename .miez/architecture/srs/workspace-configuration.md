@@ -159,7 +159,7 @@ Acceptance:
 
 - WHEN a supported model is selected for an agent worker THEN subsequent
   rendering uses that effective model.
-- WHEN a command worker or unknown model is selected THEN the operation fails
+- WHEN a non-agent worker or unknown model is selected THEN the operation fails
   and no override is applied.
 
 #### `compatibility/one-active-team-per-workspace`

@@ -115,7 +115,7 @@ managed files under `.github/` while developing artifact changes.
 ## Remote teams and APM
 
 Remote teams are installed with `miez team install <github-url>`. A team package
-contains authored `miez.yaml` plus `workers/`, `skills/`, and `workflows/`; its
+contains authored `miez.yaml` plus `workers/`, `skills/`, `tasks/`, and `workflows/`; its
 generated `miez.generated.yaml` is committed with the package and is the install-time
 catalog. Already-installed teams are activated with `miez team use <team-id>`;
 that command does not download remote content. APM's `apm.yml` and `.apm/`

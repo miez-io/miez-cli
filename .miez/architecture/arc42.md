@@ -8,8 +8,8 @@ unimplemented roadmap behavior.
 
 miez-cli is a local command-line tool for building, installing, and
 configuring Markdown-based agent teams in a repository. A team package is
-authored as `miez.yaml` plus Markdown workers, skills, and workflows; `miez team
-build` generates the installable `miez.generated.yaml` catalog. miez fetches and
+authored as `miez.yaml` plus Markdown workers, skills, tasks, and workflows;
+`miez team build` generates the installable `miez.generated.yaml` catalog. miez fetches and
 validates that catalog, stores a local source copy, renders the bundle to
 GitHub Copilot locations, and records enough state for local overrides,
 updates, and audits.
@@ -109,8 +109,8 @@ persistence boundary.
 3. **Use a file-backed domain model.** YAML manifests and Markdown frontmatter
    define teams, while `.miez/config.yaml` records workspace-local choices.
 4. **Render one provider-specific target.** The compiler has a Copilot target
-   and maps command workers, agent workers, skills, rules, and workflow phases
-   to fixed Copilot file kinds.
+  and maps worker agents, task prompts, skills, rules, and workflow phases to
+  fixed Copilot file kinds.
 5. **Resolve remote state before installation.** GitHub refs are resolved to a
    commit before the tarball is selected, and updates avoid downloading when
    the commit is unchanged.

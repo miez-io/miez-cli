@@ -1,8 +1,27 @@
 # miez-cli
 
+## Domain model
+
+miez-cli organizes an agent team around four distinct artifact roles:
+
+- **Workers** are personas: durable identity, motivation, goals, beliefs,
+  judgment, and boundaries. Every worker resolves to a selectable GitHub
+  Copilot custom agent.
+- **Skills** describe how to solve something: reusable, worker-independent
+  know-how, procedures, and guardrails assigned to workers.
+- **Tasks** describe what to do: partial reusable todos or worker-neutral work
+  objectives that can be applied with different workers and skill sets.
+- **Workflows** describe how to chain work: ordered coordination of workers and
+  task assignments for more automation. miez renders the coordination; GitHub
+  Copilot executes it.
+
+Tasks are first-class reusable objectives. Their requirements and design are
+documented in [.miez/architecture/srs/task-artifacts.md](.miez/architecture/srs/task-artifacts.md)
+and [.miez/architecture/sdd/sdd-task-artifacts-and-invocation.md](.miez/architecture/sdd/sdd-task-artifacts-and-invocation.md).
+
 miez-cli is a small Go CLI for installing configurable teams of Markdown
-workers. Teams contain specialized workers, reusable skills, and workflow
-routing. miez performs deterministic setup, validation, state changes,
+workers. Teams contain specialized workers, reusable skills, tasks, and
+workflow routing. miez performs deterministic setup, validation, state changes,
 distribution (install/update/audit), and compilation; GitHub Copilot remains
 responsible for actually running the workflow.
 
@@ -100,16 +119,23 @@ any file under `.miez/miez_modules/`. A public repository needs no credential.
 
 ## Authoring and artifact contract
 
-Team authors work from a package directory containing `miez.yaml` and three
-artifact folders. `miez.generated.yaml` is generated; do not hand-edit it:
+Team authors work from a package directory containing `miez.yaml` and four
+operational artifact folders. `miez.generated.yaml` is generated; do not
+hand-edit it:
 
 ```text
 my-team/
   miez.yaml
   workers/*.md
   skills/<skill-id>/SKILL.md
+  tasks/*.md
   workflows/*.md
 ```
+
+Tasks are rendered as worker-neutral Copilot prompts. The user
+selects a worker agent and invokes the task in that agent's context. Workflows
+that coordinate multiple workers use provider-supported agent delegation or
+handoffs; miez does not rely on nested slash-prompt invocation.
 
 The package manifest owns team metadata and shared declarations:
 
@@ -163,12 +189,12 @@ miez team build my-team
 `miez team build` validates package metadata and all artifact frontmatter,
 then atomically generates `miez.generated.yaml`. A failed build leaves the previous
 generated index unchanged. Once installed, miez uses `miez.generated.yaml` for workflow,
-worker, skill, model, and MCP catalog information without rediscovering
+worker, skill, task, model, and MCP catalog information without rediscovering
 authoring frontmatter.
 
 `miez team bootstrap` also creates a README and a package-local Copilot
 authoring support bundle under `.github/`: a package-contract instruction,
-prompts for adding a worker, skill, or workflow, a `write-workers` skill
+prompts for adding a worker, skill, task, or workflow, a `write-workers` skill
 carrying the strict worker template, and a `review-team-package` skill with a
 build-error reference. These support files help authors maintain valid team
 source but are not operational entries in `miez.generated.yaml` and are not
@@ -192,6 +218,10 @@ workers:
     path: workers/architect.md
     model: claude-sonnet-4.5
     skills: [architecture]
+tasks:
+  - id: analyze-existing-solution
+    path: tasks/analyze-existing-solution.md
+    description: Analyze an existing solution and document its requirements.
 workflows:
   - id: default
     name: Default
@@ -201,7 +231,7 @@ workflows:
         workers: [architect]
 ```
 
-Only `kind: agent` workers have a model. A worker model overrides the team's
+Every worker uses `kind: agent` and may have a model. A worker model overrides the team's
 `default_model`, which falls back to a built-in default. Team-declared models
 use stable ids and a `copilot` mapping; provider-specific names never appear
 in worker frontmatter.
