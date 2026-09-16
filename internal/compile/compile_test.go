@@ -31,11 +31,16 @@ func TestBuildRendersCopilotOutputAndLinkedSkills(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := plan.Files[".github/prompts/builder.prompt.md"]; !ok {
-		t.Fatal("missing Copilot prompt")
+	if _, ok := plan.Files[".github/agents/builder.md"]; !ok {
+		t.Fatal("missing Copilot agent")
 	}
-	workerOutput := string(plan.Files[".github/prompts/builder.prompt.md"])
-	if !strings.HasPrefix(workerOutput, "---\ndescription: Builds implementation prompts.\n---\n\n") {
+	if taskOutput, ok := plan.Files[".github/prompts/task-analyze.prompt.md"]; !ok {
+		t.Fatal("missing task prompt")
+	} else if !strings.HasPrefix(string(taskOutput), "---\ndescription: Analyze the solution.\n---\n\n# Analyze\n") {
+		t.Fatalf("task prompt = %q", taskOutput)
+	}
+	workerOutput := string(plan.Files[".github/agents/builder.md"])
+	if !strings.HasPrefix(workerOutput, "---\nmodel: GPT-5 (copilot)\ndescription: Builds implementation prompts.\n---\n\n") {
 		t.Fatalf("prompt description frontmatter = %q", workerOutput)
 	}
 	if !strings.Contains(workerOutput, "## Skills") {
@@ -63,7 +68,10 @@ func TestBuildRendersCopilotOutputAndLinkedSkills(t *testing.T) {
 	if err := Apply(workspaceValue, plan); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(root, ".github", "prompts", "builder.prompt.md")); err != nil {
+	if _, err := os.Stat(filepath.Join(root, ".github", "agents", "builder.md")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(root, ".github", "prompts", "task-analyze.prompt.md")); err != nil {
 		t.Fatal(err)
 	}
 	for relative, expected := range map[string]string{
@@ -85,6 +93,9 @@ func TestBuildRendersCopilotOutputAndLinkedSkills(t *testing.T) {
 	if !hasPath(managedPaths, ".github/skills/extra/assets/template.md") ||
 		!hasPath(managedPaths, ".github/skills/extra/references/guide.md") {
 		t.Fatalf("managed paths = %#v", managedPaths)
+	}
+	if !hasPath(managedPaths, ".github/prompts/task-analyze.prompt.md") {
+		t.Fatalf("managed paths omitted task prompt: %#v", managedPaths)
 	}
 }
 
@@ -125,7 +136,7 @@ func TestApplyRejectsUnmanagedGeneratedFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	target := filepath.Join(root, ".github", "prompts", "builder.prompt.md")
+	target := filepath.Join(root, ".github", "agents", "builder.md")
 	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +222,7 @@ func TestBuildHonorsRemovedSkills(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(plan.Files[".github/prompts/builder.prompt.md"]), "Assigned skill: extra") {
+	if strings.Contains(string(plan.Files[".github/agents/builder.md"]), "Assigned skill: extra") {
 		t.Fatal("removed skill was rendered")
 	}
 }
@@ -423,6 +434,9 @@ func writeCompileTeam(t *testing.T, root string) {
 	if err := os.MkdirAll(filepath.Join(root, "skills", "extra"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.MkdirAll(filepath.Join(root, "tasks"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	manifest := `
 id: demo-team
 version: 1.0.0
@@ -430,9 +444,13 @@ name: Demo team
 skills:
   - id: extra
     path: skills/extra/SKILL.md
+tasks:
+  - id: analyze
+    path: tasks/analyze.md
+    description: Analyze the solution.
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/builder.md
     skills: []
 workflows: [{id: default, name: Default, path: workflows/default.md, phases: [{id: build, workers: [builder]}]}]
@@ -445,6 +463,9 @@ workflows: [{id: default, name: Default, path: workflows/default.md, phases: [{i
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(root, "skills", "extra", "SKILL.md"), []byte("---\n---\n# Extra\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "tasks", "analyze.md"), []byte("---\ndescription: Analyze the solution.\n---\n# Analyze\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	for relative, content := range map[string]string{

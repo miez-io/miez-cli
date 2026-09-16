@@ -17,7 +17,7 @@ Common `miez team build .` failures, their cause, and the fix.
 
 | Message | Cause | Fix |
 |---|---|---|
-| `required artifact directory … is missing` | `workers/`, `skills/`, or `workflows/` absent | create it |
+| `required artifact directory … is missing` | `workers/`, `skills/`, `tasks/`, or `workflows/` absent | create it |
 | `team package must contain at least one workflow Markdown file` | no workflow | add `workflows/<id>.md` |
 | `skill … must use skills/<skill-id>/SKILL.md` | skill nested too deep or too shallow | move to exactly that path |
 | `artifact path … must not be a symlink` | symlinked artifact | replace with a real file |
@@ -31,8 +31,7 @@ Common `miez team build .` failures, their cause, and the fix.
 | `file name implies id "…", want "…"` | generated catalog disagrees with the file layout | re-run `miez team build .`; never hand-edit the generated file |
 | `invalid frontmatter: field … not found` | unknown key on a worker or workflow — both are strict | remove the key; only documented fields are allowed |
 | `duplicate worker id` / `duplicate skill id` / `duplicate workflow id` | two artifacts share an id | make ids unique |
-| `kind "…" must be agent or command` | invalid or missing `kind` | use `command` or `agent` |
-| `model is only valid for kind: agent workers` | `model` on a command worker | remove `model` or switch to `agent` |
+| `kind "…" is not supported` | invalid, missing, or prompt-only worker kind | use `kind: agent` |
 
 ## References
 

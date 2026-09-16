@@ -145,8 +145,8 @@ func newTestService(root string, fake *fakeGitHub, env map[string]string) *Servi
 func demoTeamFiles(id, name string) map[string]string {
 	return map[string]string{
 		id + "/miez.yaml":            fmt.Sprintf("id: %s\nversion: 1.0.0\nname: %s\nauthor: test\n", id, name),
-		id + "/miez.generated.yaml":  fmt.Sprintf("id: %s\nversion: 1.0.0\nname: %s\nauthor: test\nworkers:\n  - id: builder\n    kind: command\n    path: workers/builder.md\nworkflows:\n  - id: default\n    name: Default\n    path: workflows/default.md\n    phases:\n      - id: build\n        workers: [builder]\n", id, name),
-		id + "/workers/builder.md":   "---\nkind: command\n---\n# Builder\n",
+		id + "/miez.generated.yaml":  fmt.Sprintf("id: %s\nversion: 1.0.0\nname: %s\nauthor: test\nworkers:\n  - id: builder\n    kind: agent\n    path: workers/builder.md\nworkflows:\n  - id: default\n    name: Default\n    path: workflows/default.md\n    phases:\n      - id: build\n        workers: [builder]\n", id, name),
+		id + "/workers/builder.md":   "---\nkind: agent\n---\n# Builder\n",
 		id + "/workflows/default.md": "---\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n",
 	}
 }

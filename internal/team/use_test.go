@@ -198,7 +198,7 @@ func TestUseActivatesInstalledTeamAndRetainsOtherModules(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := os.Stat(filepath.Join(root, ".github", "prompts", "builder.prompt.md")); err != nil {
+	if _, err := os.Stat(filepath.Join(root, ".github", "agents", "builder.md")); err != nil {
 		t.Fatalf("new team's rendered output missing: %v", err)
 	}
 	reopened, err := workspace.Open(root)

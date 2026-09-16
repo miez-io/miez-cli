@@ -1,6 +1,6 @@
 ---
 name: review-team-package
-description: "Review a miez team package before publishing. Use when miez team build fails, when checking worker, skill, and workflow boundaries, or when verifying that miez.generated.yaml still matches the authored source."
+description: "Review a miez team package before publishing. Use when miez team build fails, when checking worker, skill, task, and workflow boundaries, or when verifying that miez.generated.yaml still matches the authored source."
 ---
 
 # Review Team Package
@@ -13,15 +13,15 @@ it does not restructure artifacts on its own.
 1. Run `miez team build .`. If it fails, map the message with
    [references/build-errors.md](./references/build-errors.md), fix the cause,
    and re-run until it passes.
-2. Confirm `workers/`, `skills/`, and `workflows/` exist and that nothing
-   parked under `workers/` or `workflows/` is anything other than a real
-   worker or workflow.
+2. Confirm `workers/`, `skills/`, `tasks/`, and `workflows/` exist and that
+   nothing parked under `workers/`, `tasks/`, or `workflows/` is anything other
+   than a real artifact.
 3. Confirm every skill lives at `skills/<skill-id>/SKILL.md` with an `id`
    matching its folder.
 4. Confirm every `skills:` and `tools:` reference on a worker resolves, and
    that every workflow phase lists existing worker ids.
-5. Confirm no `kind: command` worker sets `model`, and every agent model
-   resolves in the merged catalog.
+5. Confirm every worker uses `kind: agent` and every agent model resolves in
+   the merged catalog.
 6. Read each worker body as if the frontmatter were gone, which is how Copilot
    receives it. Flag placeholder text, missing persona sections, and anything
    that reads like workflow choreography.

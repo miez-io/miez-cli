@@ -79,25 +79,40 @@ func Build(workspaceValue workspace.Workspace, team artifacts.TeamDir, state mod
 				description = value
 			}
 		}
-		modelName := ""
-		if worker.Kind == model.WorkerAgent {
-			modelID := worker.EffectiveModel(state, team.Team.DefaultModel)
-			option, ok := model.FindModel(team.Team, modelID)
-			if !ok {
-				return Plan{}, fmt.Errorf("worker %q: unsupported model %q; choose one of: %s", worker.ID, modelID, strings.Join(model.ModelIDs(team.Team), ", "))
-			}
-			resolvedModelName, err := option.NameFor()
-			if err != nil {
-				return Plan{}, fmt.Errorf("worker %q: %w", worker.ID, err)
-			}
-			modelName = resolvedModelName
+		modelID := worker.EffectiveModel(state, team.Team.DefaultModel)
+		option, ok := model.FindModel(team.Team, modelID)
+		if !ok {
+			return Plan{}, fmt.Errorf("worker %q: unsupported model %q; choose one of: %s", worker.ID, modelID, strings.Join(model.ModelIDs(team.Team), ", "))
 		}
-		frontmatter, err := renderWorkerFrontmatter(description, modelName)
+		modelName, err := option.NameFor()
+		if err != nil {
+			return Plan{}, fmt.Errorf("worker %q: %w", worker.ID, err)
+		}
+		frontmatter, err := renderPromptFrontmatter(description, modelName)
 		if err != nil {
 			return Plan{}, fmt.Errorf("worker %q: %w", worker.ID, err)
 		}
 		body = frontmatter + body
 		if err := addFile(files, workerPath(worker), []byte(body+"\n")); err != nil {
+			return Plan{}, err
+		}
+	}
+	for _, task := range team.Team.Tasks {
+		markdown, err := team.ReadTask(task)
+		if err != nil {
+			return Plan{}, err
+		}
+		description := task.Description
+		if description == "" {
+			if value, ok := markdown.Metadata["description"].(string); ok {
+				description = value
+			}
+		}
+		frontmatter, err := renderPromptFrontmatter(description, "")
+		if err != nil {
+			return Plan{}, fmt.Errorf("task %q: %w", task.ID, err)
+		}
+		if err := addFile(files, taskPath(task), []byte(frontmatter+markdown.Body+"\n")); err != nil {
 			return Plan{}, err
 		}
 	}
@@ -305,6 +320,9 @@ func ManagedPaths(team artifacts.TeamDir, state model.TeamState) ([]string, erro
 			}
 		}
 	}
+	for _, task := range team.Team.Tasks {
+		paths = append(paths, taskPath(task))
+	}
 	rules, err := renderRules(team)
 	if err != nil {
 		return nil, err
@@ -357,14 +375,14 @@ func (transaction *Transaction) Rollback() error {
 }
 
 func workerPath(worker model.Worker) string {
-	id := worker.ID
-	if worker.Kind == model.WorkerAgent {
-		return filepath.ToSlash(filepath.Join(".github", "agents", id+".md"))
-	}
-	return filepath.ToSlash(filepath.Join(".github", "prompts", id+".prompt.md"))
+	return filepath.ToSlash(filepath.Join(".github", "agents", worker.ID+".md"))
 }
 
-func renderWorkerFrontmatter(description, modelName string) (string, error) {
+func taskPath(task model.Task) string {
+	return filepath.ToSlash(filepath.Join(".github", "prompts", "task-"+task.ID+".prompt.md"))
+}
+
+func renderPromptFrontmatter(description, modelName string) (string, error) {
 	if description == "" && modelName == "" {
 		return "", nil
 	}

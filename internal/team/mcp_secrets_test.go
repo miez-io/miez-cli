@@ -12,8 +12,8 @@ import (
 func mcpTeamFiles(id string) map[string]string {
 	return map[string]string{
 		id + "/miez.yaml":            "id: " + id + "\nversion: 1.0.0\nname: MCP team\nauthor: test\nmcp:\n  - id: github\n    env:\n      GITHUB_TOKEN: \"${env:GITHUB_TOKEN}\"\n",
-		id + "/miez.generated.yaml":  "id: " + id + "\nversion: 1.0.0\nname: MCP team\nauthor: test\nmcp:\n  - id: github\n    env:\n      GITHUB_TOKEN: \"${env:GITHUB_TOKEN}\"\nworkers:\n  - id: builder\n    kind: command\n    path: workers/builder.md\n    tools: [github]\nworkflows:\n  - id: default\n    name: Default\n    path: workflows/default.md\n    phases:\n      - id: build\n        workers: [builder]\n",
-		id + "/workers/builder.md":   "---\nkind: command\ntools: [github]\n---\n# Builder\n",
+		id + "/miez.generated.yaml":  "id: " + id + "\nversion: 1.0.0\nname: MCP team\nauthor: test\nmcp:\n  - id: github\n    env:\n      GITHUB_TOKEN: \"${env:GITHUB_TOKEN}\"\nworkers:\n  - id: builder\n    kind: agent\n    path: workers/builder.md\n    tools: [github]\nworkflows:\n  - id: default\n    name: Default\n    path: workflows/default.md\n    phases:\n      - id: build\n        workers: [builder]\n",
+		id + "/workers/builder.md":   "---\nkind: agent\ntools: [github]\n---\n# Builder\n",
 		id + "/workflows/default.md": "---\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n",
 	}
 }

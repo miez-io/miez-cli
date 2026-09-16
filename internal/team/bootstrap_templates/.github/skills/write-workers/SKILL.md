@@ -1,6 +1,6 @@
 ---
 name: write-workers
-description: "Author a miez worker persona from the strict template. Use when creating a worker, rewriting a weak or generic persona, deciding between kind command and agent, or splitting procedures out of a worker into skills."
+description: "Author a miez worker persona from the strict template. Use when creating a worker, rewriting a weak or generic persona, or splitting procedures out of a worker into skills."
 ---
 
 # Write Workers
@@ -12,16 +12,11 @@ so the body alone must carry the persona.
 Always start from [assets/worker-template.md](./assets/worker-template.md) and
 keep its section order.
 
-## Choose the kind first
+## Use the agent worker form
 
-| | `kind: command` | `kind: agent` |
-|---|---|---|
-| Rendered as | `.github/prompts/<id>.prompt.md` | `.github/agents/<id>.md` |
-| Invocation | manually, per task | persistent, delegated |
-| `model:` | forbidden | optional, defaults to team `default_model` |
-
-Pick `agent` only when the worker benefits from its own model or from being
-delegated to autonomously. Otherwise pick `command`.
+Every worker uses `kind: agent` and renders to `.github/agents/<id>.md`.
+Workers are persistent Copilot agents; reusable task objectives belong in
+`tasks/<task-id>.md` and render to prompts.
 
 ## Procedure
 
@@ -49,7 +44,7 @@ delegated to autonomously. Otherwise pick `command`.
 ## Do not
 
 - Do not add workflow phases, handoff order, or a `Collaboration` section.
-- Do not set `model` on a `kind: command` worker.
+- Use `kind: agent` for every worker; prompt-only workers are not supported.
 - Do not reference a skill or MCP tool that does not exist yet.
 - Do not place the template or any other non-worker `.md` under `workers/`;
   the build treats every file there as a worker.

@@ -8,7 +8,8 @@ Create or update one workflow in `workflows/<workflow-id>.md`.
 Frontmatter is strict and must declare a non-empty `name` and at least
 one phase. The workflow id is the file name; do not declare `id`. Each phase
 needs a kebab-case `id` unique within the workflow and a
-non-empty `workers:` list naming workers that already exist under `workers/`.
+non-empty `workers:` list naming agent workers that already exist under
+`workers/`.
 
 ```yaml
 ---

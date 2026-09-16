@@ -35,6 +35,16 @@ func (team Team) Skill(skillID string) (Skill, bool) {
 	return Skill{}, false
 }
 
+// Task returns the task with taskID, if team defines one.
+func (team Team) Task(taskID string) (Task, bool) {
+	for _, task := range team.Tasks {
+		if task.ID == taskID {
+			return task, true
+		}
+	}
+	return Task{}, false
+}
+
 // EnabledWorkerIDs returns every team worker id not disabled by state.
 func (team Team) EnabledWorkerIDs(state TeamState) map[string]struct{} {
 	disabled := map[string]struct{}{}

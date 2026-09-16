@@ -29,6 +29,7 @@ func TestBootstrapCreatesTeamThatCheckAccepts(t *testing.T) {
 		".github/instructions/miez-team-package.instructions.md",
 		".github/prompts/new-worker.prompt.md",
 		".github/prompts/new-skill.prompt.md",
+		".github/prompts/new-task.prompt.md",
 		".github/prompts/new-workflow.prompt.md",
 		".github/skills/write-workers/SKILL.md",
 		".github/skills/write-workers/assets/worker-template.md",
@@ -226,7 +227,7 @@ func writeSimpleTeam(t *testing.T, root, id string) {
 	if err := os.MkdirAll(filepath.Join(root, "workers"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	manifest := "id: " + id + "\nversion: 1.0.0\nname: " + id + "\nauthor: test\nworkers:\n  - id: starter\n    kind: command\n    path: workers/starter.md\nworkflows:\n  - id: default\n    name: Default\n    path: workflows/default.md\n    phases:\n      - id: work\n        workers: [starter]\n"
+	manifest := "id: " + id + "\nversion: 1.0.0\nname: " + id + "\nauthor: test\nworkers:\n  - id: starter\n    kind: agent\n    path: workers/starter.md\nworkflows:\n  - id: default\n    name: Default\n    path: workflows/default.md\n    phases:\n      - id: work\n        workers: [starter]\n"
 	if err := os.WriteFile(filepath.Join(root, "miez.generated.yaml"), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}

@@ -17,7 +17,7 @@ func TestRemovingAuthoredSkillRemovesCompiledLink(t *testing.T) {
 	if err := installFixtureTeam(t, app); err != nil {
 		t.Fatal(err)
 	}
-	workerPath := filepath.Join(root, ".github", "prompts", "spec-engineer.prompt.md")
+	workerPath := filepath.Join(root, ".github", "agents", "spec-engineer.md")
 	data, err := os.ReadFile(workerPath)
 	if err != nil {
 		t.Fatal(err)

@@ -16,7 +16,7 @@ version: 1.0.0
 name: Valid team
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/builder.md
     skills: [writing]
 workflows:
@@ -103,7 +103,7 @@ models:
   - id: gpt-6
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/builder.md
 workflows:
   - id: default
@@ -184,7 +184,7 @@ name: Bad default model team
 default_model: gpt5.5
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/builder.md
 workflows:
   - id: default
@@ -203,7 +203,7 @@ workflows:
 	}
 }
 
-func TestTeamRejectsModelOnCommandWorker(t *testing.T) {
+func TestTeamRejectsCommandWorker(t *testing.T) {
 	root := writeTeam(t, "command-model-team", `
 id: command-model-team
 version: 1.0.0
@@ -225,8 +225,8 @@ workflows:
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := Team(team).Error(); err == nil || !strings.Contains(err.Error(), "only valid for kind: agent") {
-		t.Fatalf("error = %v, want model-on-command validation error", err)
+	if err := Team(team).Error(); err == nil || !strings.Contains(err.Error(), "not supported") {
+		t.Fatalf("error = %v, want command-worker validation error", err)
 	}
 }
 
@@ -241,7 +241,7 @@ mcp:
       GITHUB_TOKEN: "${env:GITHUB_TOKEN}"
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/builder.md
     tools: [github]
 workflows:
@@ -268,7 +268,7 @@ version: 1.0.0
 name: Bad MCP team
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/builder.md
     tools: [unknown-tool]
 workflows:
@@ -296,7 +296,7 @@ version: 1.0.0
 name: Broken team
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/missing.md
     skills: [missing-skill]
 workflows:
@@ -324,7 +324,7 @@ version: 1.0.0
 name: Duplicate team
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/builder.md
 workflows:
   - id: default
@@ -353,7 +353,7 @@ version: 1.0.0
 name: Empty workflow team
 workers:
   - id: builder
-    kind: command
+    kind: agent
     path: commands/builder.md
 workflows:
   - id: default

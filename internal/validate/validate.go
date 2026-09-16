@@ -116,6 +116,26 @@ func Team(team artifacts.TeamDir) Result {
 		}
 	}
 
+	declaredTasks := map[string]struct{}{}
+	for index, task := range team.Team.Tasks {
+		path := fmt.Sprintf("%s tasks[%d]", manifestPath, index)
+		checkIdentifier(&result, path, task.ID, "task id")
+		if _, exists := declaredTasks[task.ID]; exists {
+			result.Issues = append(result.Issues, Issue{Path: path, Message: fmt.Sprintf("duplicate task id %q", task.ID)})
+		}
+		declaredTasks[task.ID] = struct{}{}
+		if strings.TrimSpace(task.Path) == "" {
+			result.Issues = append(result.Issues, Issue{Path: path, Message: "path is required"})
+			continue
+		}
+		if strings.ToLower(filepath.Ext(task.Path)) != ".md" {
+			result.Issues = append(result.Issues, Issue{Path: path, Message: "path must reference a Markdown file"})
+		}
+		if _, err := team.ReadTask(task); err != nil {
+			result.Issues = append(result.Issues, Issue{Path: path, Message: err.Error()})
+		}
+	}
+
 	declaredModels := map[string]struct{}{}
 	for index, option := range team.Team.Models {
 		path := fmt.Sprintf("%s models[%d]", manifestPath, index)
@@ -157,20 +177,15 @@ func Team(team artifacts.TeamDir) Result {
 			result.Issues = append(result.Issues, Issue{Path: path, Message: fmt.Sprintf("duplicate worker id %q", worker.ID)})
 		}
 		workers[worker.ID] = worker
-		if worker.Kind != model.WorkerAgent && worker.Kind != model.WorkerCommand {
-			result.Issues = append(result.Issues, Issue{Path: path, Message: fmt.Sprintf("kind %q must be agent or command", worker.Kind)})
+		if worker.Kind != model.WorkerAgent {
+			result.Issues = append(result.Issues, Issue{Path: path, Message: fmt.Sprintf("kind %q is not supported; workers must use kind: agent", worker.Kind)})
 		}
-		switch {
-		case worker.Kind == model.WorkerCommand && worker.Model != "":
-			result.Issues = append(result.Issues, Issue{Path: path, Message: "model is only valid for kind: agent workers"})
-		case worker.Kind == model.WorkerAgent:
-			effectiveModel := worker.EffectiveModel(model.TeamState{}, team.Team.DefaultModel)
-			if _, ok := model.FindModel(team.Team, effectiveModel); !ok {
-				result.Issues = append(result.Issues, Issue{
-					Path:    path,
-					Message: fmt.Sprintf("model %q is not supported; choose one of: %s", effectiveModel, strings.Join(model.ModelIDs(team.Team), ", ")),
-				})
-			}
+		effectiveModel := worker.EffectiveModel(model.TeamState{}, team.Team.DefaultModel)
+		if _, ok := model.FindModel(team.Team, effectiveModel); !ok {
+			result.Issues = append(result.Issues, Issue{
+				Path:    path,
+				Message: fmt.Sprintf("model %q is not supported; choose one of: %s", effectiveModel, strings.Join(model.ModelIDs(team.Team), ", ")),
+			})
 		}
 		for _, toolID := range worker.Tools {
 			if _, ok := declaredTools[toolID]; !ok {

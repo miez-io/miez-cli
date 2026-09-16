@@ -1,6 +1,6 @@
 ---
-description: "miez team package contract. Use when creating or editing miez.yaml, workers/, skills/, workflows/, or rules/, when running miez team build, or when a build or check fails. Covers frontmatter schemas, id rules, model ids, and what miez renders for Copilot."
-applyTo: ["miez.yaml", "miez.generated.yaml", "workers/**", "skills/**", "workflows/**", "rules/**"]
+description: "miez team package contract. Use when creating or editing miez.yaml, workers/, skills/, tasks/, workflows/, or rules/, when running miez team build, or when a build or check fails. Covers frontmatter schemas, id rules, model ids, and what miez renders for Copilot."
+applyTo: ["miez.yaml", "miez.generated.yaml", "workers/**", "skills/**", "tasks/**", "workflows/**", "rules/**"]
 ---
 
 # miez team package contract
@@ -15,12 +15,13 @@ compiled by `miez team build .` into `miez.generated.yaml`.
 | `miez.yaml` | Authored package metadata, model catalog, MCP declarations |
 | `workers/*.md` | Authored workers |
 | `skills/<skill-id>/SKILL.md` | Authored skills |
+| `tasks/*.md` | Authored reusable task prompts |
 | `workflows/*.md` | Authored workflows |
 | `rules/*.md` | Optional always-on team rules |
 | `miez.generated.yaml` | **Generated. Never edit by hand.** |
 
-`workers/`, `skills/`, and `workflows/` must all exist, and a package must
-declare at least one workflow. Run `miez team build .` after any change; it
+`workers/`, `skills/`, `tasks/`, and `workflows/` must all exist, and a package
+must declare at least one workflow. Run `miez team build .` after any change; it
 validates everything and rewrites `miez.generated.yaml`. A failed build leaves
 the previous generated file untouched.
 
@@ -35,18 +36,27 @@ authoring this package, use `miez team build .`.
 
 ## Frontmatter schemas
 
-Worker frontmatter is strict — an unknown field fails the build. The worker
-id is the file name (`workers/architect.md` becomes `architect`); `id` is not
-a frontmatter field.
+Worker frontmatter is strict — an unknown field fails the build. Every worker
+is a Copilot custom agent; the worker id is the file name
+(`workers/architect.md` becomes `architect`); `id` is not a frontmatter field.
 
 ```yaml
 ---
-kind: agent          # required: command | agent
-model: gpt-5         # agent only; never on a command worker
+kind: agent          # required: every worker is an agent
+model: gpt-5         # optional; defaults to the team model
 skills: [architecture]  # optional; ids that exist under skills/
 tools: [github]      # optional; ids declared in miez.yaml mcp:
 name: Architect      # optional, human-readable only
 description: ...     # optional, human-readable only
+---
+```
+
+Task frontmatter is strict — the task id is the file name and `description` is
+optional:
+
+```yaml
+---
+description: Analyze an existing solution and document its requirements.
 ---
 ```
 
@@ -73,8 +83,9 @@ description: ...
 
 ## Rules that break the build
 
-- Every `.md` under `workers/` must be a valid worker, and every `.md` under
-  `workflows/` a valid workflow — the scan is recursive. Never park templates
+- Every `.md` under `workers/` must be a valid worker, every `.md` under
+  `tasks/` a valid task, and every `.md` under `workflows/` a valid workflow —
+  the scan is recursive. Never park templates
   or notes in those folders.
 - A skill must sit exactly at `skills/<skill-id>/SKILL.md`. Other files under
   a skill folder (`assets/`, `references/`) are ignored by the build.
@@ -92,8 +103,8 @@ miez strips frontmatter and renders the Markdown **body**:
 
 | Artifact | Output |
 |---|---|
-| `kind: command` worker | `.github/prompts/<id>.prompt.md` |
-| `kind: agent` worker | `.github/agents/<id>.md`, with the resolved Copilot model prepended |
+| worker agent | `.github/agents/<id>.md`, with the resolved Copilot model prepended |
+| task | `.github/prompts/task-<id>.prompt.md` |
 | assigned skill | `.github/skills/<skill-id>/SKILL.md`, linked from the worker |
 | selected workflow | `.github/instructions/miez-workflow.instructions.md` |
 | `rules/*.md` | `.github/instructions/miez-rules.instructions.md` |
@@ -106,6 +117,8 @@ with its role, not with a bare "Describe this worker".
 - A worker owns durable persona: identity, motivation, goals, beliefs,
   boundaries. Not procedures, not workflow order.
 - A skill owns one reusable procedure, independent of any worker's personality.
+- A task owns one reusable objective or partial todo, independent of a worker
+  persona and skill assignment.
 - A workflow owns ordered phases and worker membership.
 
 Assign skills in worker frontmatter; do not paste skill bodies into workers.

@@ -74,6 +74,11 @@ func (team TeamDir) ReadWorker(worker model.Worker) (Markdown, error) {
 	return readMarkdown(team.Root, worker.Path, worker.ID)
 }
 
+// ReadTask reads one reusable task Markdown artifact.
+func (team TeamDir) ReadTask(task model.Task) (Markdown, error) {
+	return readMarkdown(team.Root, task.Path, task.ID)
+}
+
 // ReadSkill reads a skill Markdown artifact by id.
 func (team TeamDir) ReadSkill(skillID string) (Markdown, error) {
 	if !model.IsValidIdentifier(skillID) {
@@ -169,8 +174,8 @@ type Markdown struct {
 }
 
 // IDFromPath derives the artifact identity from its location: a skill id is
-// its skills/<skill-id>/ directory name, worker and workflow ids are the
-// Markdown file name without extension.
+// its skills/<skill-id>/ directory name, while worker, task, and workflow ids
+// are the Markdown file name without extension.
 func IDFromPath(relativePath string) string {
 	base := filepath.Base(filepath.FromSlash(relativePath))
 	if base == "SKILL.md" {
@@ -266,6 +271,11 @@ func (team TeamDir) FilesExist() error {
 			if _, err := os.Stat(path); err != nil {
 				return fmt.Errorf("worker %q skill %q: %w", worker.ID, skill, err)
 			}
+		}
+	}
+	for _, task := range team.Team.Tasks {
+		if _, err := os.Stat(filepath.Join(team.Root, filepath.FromSlash(task.Path))); err != nil {
+			return fmt.Errorf("task %q path %q: %w", task.ID, task.Path, err)
 		}
 	}
 	for _, workflow := range team.Team.Workflows {

@@ -1,5 +1,5 @@
 ---
-kind: command
+kind: agent
 skills: [writing]
 ---
 # Starter worker

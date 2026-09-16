@@ -4,7 +4,6 @@ package model
 const (
 	ConfigVersion = 1
 	WorkerAgent   = "agent"
-	WorkerCommand = "command"
 )
 
 // Config is the local state written below .miez.
@@ -38,6 +37,7 @@ type Team struct {
 	Models       []ModelOption `yaml:"models,omitempty"`
 	MCP          []MCPServer   `yaml:"mcp,omitempty"`
 	Skills       []Skill       `yaml:"skills,omitempty"`
+	Tasks        []Task        `yaml:"tasks,omitempty"`
 	Workers      []Worker      `yaml:"workers"`
 	Workflows    []Workflow    `yaml:"workflows"`
 }
@@ -46,6 +46,13 @@ type Team struct {
 type Skill struct {
 	ID   string `yaml:"id"`
 	Path string `yaml:"path"`
+}
+
+// Task points at one reusable task prompt Markdown artifact.
+type Task struct {
+	ID          string `yaml:"id"`
+	Path        string `yaml:"path"`
+	Description string `yaml:"description,omitempty"`
 }
 
 // MCPServer is one available MCP tool server a worker may depend on. Env
@@ -57,9 +64,8 @@ type MCPServer struct {
 	Env map[string]string `yaml:"env,omitempty"`
 }
 
-// Worker points at a command or agent Markdown artifact. Model is only
-// meaningful for kind: agent workers. Tools references ids declared in the
-// owning team's MCP list.
+// Worker points at one Copilot custom-agent Markdown artifact. Tools references
+// ids declared in the owning team's MCP list.
 type Worker struct {
 	ID          string   `yaml:"id"`
 	Kind        string   `yaml:"kind"`

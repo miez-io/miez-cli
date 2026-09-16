@@ -13,31 +13,35 @@ skills:
     path: skills/review/SKILL.md
   - id: spec-writing
     path: skills/spec-writing/SKILL.md
+tasks:
+  - id: analyze-existing-solution
+    path: tasks/analyze-existing-solution.md
+    description: Analyze an existing solution and document its requirements.
 workers:
   - id: spec-engineer
-    kind: command
+    kind: agent
     path: workers/spec-engineer.md
     skills: [spec-writing]
   - id: architect
-    kind: command
+    kind: agent
     path: workers/architect.md
     skills: [architecture]
   - id: planner
-    kind: command
+    kind: agent
     path: workers/planner.md
     skills: [planning]
   - id: user-story
-    kind: command
+    kind: agent
     path: workers/user-story.md
   - id: implementer
-    kind: command
+    kind: agent
     path: workers/implementer.md
   - id: reviewer
-    kind: command
+    kind: agent
     path: workers/reviewer.md
     skills: [review]
   - id: finisher
-    kind: command
+    kind: agent
     path: workers/finisher.md
 workflows:
   - id: default

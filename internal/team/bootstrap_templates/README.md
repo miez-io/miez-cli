@@ -5,7 +5,8 @@ that miez validates and turns into a portable GitHub Copilot team.
 
 ## Quick start
 
-1. Edit `miez.yaml`, the files below `workers/`, `skills/`, and `workflows/`.
+1. Edit `miez.yaml`, the files below `workers/`, `skills/`, `tasks/`, and
+   `workflows/`.
 2. Run `miez team build .` to validate the package and generate
    `miez.generated.yaml`.
 3. Review the generated catalog, then commit the authored files and the
@@ -21,13 +22,14 @@ leaves the previous generated index unchanged.
 miez.yaml                         team metadata and model/MCP declarations
 workers/<worker-id>.md            worker personas and capabilities
 skills/<skill-id>/SKILL.md        reusable skills assigned to workers
-workflows/<workflow-id>.md        ordered phases and workflow membership
+tasks/<task-id>.md                reusable task objectives rendered as prompts
+workflows/<workflow-id>.md        ordered phases and agent membership
 rules/<name>.md                   optional always-on team rules
 miez.generated.yaml               generated operational catalog
 ```
 
-`workers/`, `skills/`, and `workflows/` are required, and a package must
-declare at least one workflow. `rules/` is optional: every top-level `.md`
+`workers/`, `skills/`, `tasks/`, and `workflows/` are required, and a package
+must declare at least one workflow. `rules/` is optional: every top-level `.md`
 there is concatenated into one always-on Copilot instruction, separate from
 the active workflow.
 
@@ -37,15 +39,10 @@ and is not added to `miez.generated.yaml`.
 
 ## Workers
 
-Every worker needs a `kind`. The only valid kinds are:
-
-- `command`: a manually invoked Copilot prompt.
-- `agent`: a persistent Copilot custom agent.
-
-The worker id is the file name: `workers/architect.md` becomes `architect`.
-Only an `agent` worker may set `model`. A worker can assign reusable skills with
-`skills: [skill-id]` and may reference declared MCP servers with `tools:
-[mcp-id]`.
+Every worker is a persistent Copilot custom agent. The worker id is the file
+name: `workers/architect.md` becomes `architect`. Use `kind: agent` and assign
+reusable skills with `skills: [skill-id]`; workers may reference declared MCP
+servers with `tools: [mcp-id]`.
 
 Keep durable identity, motivation, goals, beliefs, and boundaries in the worker
 body. Put repeatable procedures and technology-specific methods in skills.
@@ -62,6 +59,23 @@ skills: [architecture]
 # Architect
 
 Describe the worker's durable persona and decision posture.
+```
+
+## Tasks
+
+A task describes what to do: a reusable objective or partial todo independent
+of worker identity and skill assignment. Its id is the file name, and its body
+is rendered as a GitHub Copilot prompt under `.github/prompts/task-<id>.prompt.md`.
+Select a worker agent, then invoke the task prompt in that agent's context.
+Tasks do not invoke other prompts from inside their body.
+
+```markdown
+---
+description: Analyze an existing solution and document its requirements.
+---
+# Analyze an existing solution
+
+Describe the reusable objective and expected output.
 ```
 
 ## Skills and workflows
@@ -104,6 +118,7 @@ a worker, skill, or workflow and never appears in `miez.generated.yaml`.
 | `instructions/miez-team-package.instructions.md` | The package contract: layout, frontmatter schemas, id rules, what miez renders. Attaches automatically when you edit an authored artifact. |
 | `prompts/new-worker.prompt.md` | Add one worker from the strict template. |
 | `prompts/new-skill.prompt.md` | Add one reusable skill. |
+| `prompts/new-task.prompt.md` | Add one reusable task prompt. |
 | `prompts/new-workflow.prompt.md` | Create or restructure a workflow's phases. |
 | `skills/write-workers/` | Persona authoring workflow plus `assets/worker-template.md`. |
 | `skills/review-team-package/` | Pre-publish review, with a build-error reference. |

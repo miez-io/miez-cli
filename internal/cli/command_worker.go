@@ -45,7 +45,7 @@ func (app *App) newWorkerModelListCommand() *cobra.Command {
 func (app *App) newWorkerModelSetCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "set <worker-id> <model-id>",
-		Short: "switch a kind: agent worker to a different model",
+		Short: "switch a worker agent to a different model",
 		Args:  exactArgs(2),
 		ValidArgsFunction: func(command *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			_, team, _, err := app.activeTeam()
@@ -55,9 +55,7 @@ func (app *App) newWorkerModelSetCommand() *cobra.Command {
 			if len(args) == 0 {
 				ids := make([]string, 0, len(team.Team.Workers))
 				for _, worker := range team.Team.Workers {
-					if worker.Kind == model.WorkerAgent {
-						ids = append(ids, worker.ID)
-					}
+					ids = append(ids, worker.ID)
 				}
 				return ids, cobra.ShellCompDirectiveNoFileComp
 			}
@@ -74,9 +72,6 @@ func (app *App) newWorkerModelSetCommand() *cobra.Command {
 			worker, ok := team.Team.Worker(args[0])
 			if !ok {
 				return fmt.Errorf("team %q has no worker %q", team.Team.ID, args[0])
-			}
-			if worker.Kind != model.WorkerAgent {
-				return fmt.Errorf("worker %q is kind %q; only kind: agent workers have a model", worker.ID, worker.Kind)
 			}
 			modelID := args[1]
 			if _, ok := model.FindModel(team.Team, modelID); !ok {

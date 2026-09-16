@@ -39,6 +39,10 @@ type workflowFrontmatter struct {
 	Phases      []model.Phase `yaml:"phases"`
 }
 
+type taskFrontmatter struct {
+	Description string `yaml:"description,omitempty"`
+}
+
 // Build validates a team package and returns the generated team index bytes.
 func Build(root string) (Plan, error) {
 	root, err := filepath.Abs(root)
@@ -70,6 +74,10 @@ func Build(root string) (Plan, error) {
 	}
 
 	team.Skills, err = loadSkills(root)
+	if err != nil {
+		return Plan{}, err
+	}
+	team.Tasks, err = loadTasks(root)
 	if err != nil {
 		return Plan{}, err
 	}
@@ -214,6 +222,37 @@ func loadSkills(root string) ([]model.Skill, error) {
 	}
 	sort.Slice(skills, func(left, right int) bool { return skills[left].ID < skills[right].ID })
 	return skills, nil
+}
+
+func loadTasks(root string) ([]model.Task, error) {
+	paths, err := markdownFiles(root, "tasks")
+	if err != nil {
+		return nil, err
+	}
+	tasks := make([]model.Task, 0, len(paths))
+	seen := map[string]struct{}{}
+	for _, path := range paths {
+		markdown, err := artifacts.ReadMarkdown(root, path)
+		if err != nil {
+			return nil, fmt.Errorf("task %s: %w", path, err)
+		}
+		var frontmatter taskFrontmatter
+		if err := decodeFrontmatter(markdown.Metadata, &frontmatter, true); err != nil {
+			return nil, fmt.Errorf("task %s: %w", path, err)
+		}
+		id := artifacts.IDFromPath(path)
+		if _, exists := seen[id]; exists {
+			return nil, fmt.Errorf("duplicate task id %q", id)
+		}
+		seen[id] = struct{}{}
+		tasks = append(tasks, model.Task{
+			ID:          id,
+			Path:        path,
+			Description: frontmatter.Description,
+		})
+	}
+	sort.Slice(tasks, func(left, right int) bool { return tasks[left].ID < tasks[right].ID })
+	return tasks, nil
 }
 
 func loadWorkflows(root string) ([]model.Workflow, error) {

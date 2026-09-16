@@ -21,8 +21,11 @@ func TestTeamInstallInstallsAndActivatesGitHubTeam(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(root, ".miez", "miez_modules", "spec-driven-team", "miez.generated.yaml")); err != nil {
 		t.Fatalf("team not installed under miez_modules: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(root, ".github", "prompts", "spec-engineer.prompt.md")); err != nil {
+	if _, err := os.Stat(filepath.Join(root, ".github", "agents", "spec-engineer.md")); err != nil {
 		t.Fatalf("rendered output missing: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, ".github", "prompts", "task-analyze-existing-solution.prompt.md")); err != nil {
+		t.Fatalf("rendered task prompt missing: %v", err)
 	}
 }
 
