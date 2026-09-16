@@ -129,11 +129,12 @@ mcp:
       GITHUB_TOKEN: "${env:GITHUB_TOKEN}"
 ```
 
-Worker and workflow configuration lives in Markdown frontmatter:
+Worker and workflow configuration lives in Markdown frontmatter. The artifact
+id is the file name (`workers/architect.md` becomes `architect`), never a
+frontmatter field:
 
 ```yaml
 ---
-id: architect
 kind: agent
 model: claude-sonnet-4.5
 skills: [architecture]
@@ -144,7 +145,6 @@ Describe the worker persona and behavior here.
 
 ```yaml
 ---
-id: default
 name: Default
 phases:
   - id: implement
