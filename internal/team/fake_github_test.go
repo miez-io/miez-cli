@@ -150,3 +150,21 @@ func demoTeamFiles(id, name string) map[string]string {
 		id + "/workflows/default.md": "---\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n",
 	}
 }
+
+func agentTeamFiles() map[string]string {
+	generated := "id: agent-team\nversion: 1.0.0\nname: Agent team\nauthor: test\nmodels:\n  - id: gpt-5.1\n    copilot: GPT-5.1 (copilot)\nworkers:\n  - id: architect\n    kind: agent\n    path: workers/architect.md\n    model: gpt-5.1\nworkflows:\n  - id: default\n    name: Default\n    path: workflows/default.md\n    phases:\n      - id: build\n        workers: [architect]\n"
+	workflow := "---\nname: Default\nphases:\n  - id: build\n    workers: [architect]\n---\n# Default\n"
+
+	return map[string]string{
+		"agent-team/miez.yaml":           "id: agent-team\nversion: 1.0.0\nname: Agent team\nauthor: test\nmodels:\n  - id: gpt-5.1\n    copilot: GPT-5.1 (copilot)\n",
+		"agent-team/miez.generated.yaml": generated,
+		"agent-team/workers/architect.md": `---
+kind: agent
+description: Designs system architecture.
+model: gpt-5.1
+---
+# Architect
+`,
+		"agent-team/workflows/default.md": workflow,
+	}
+}

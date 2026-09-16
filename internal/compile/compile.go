@@ -73,6 +73,12 @@ func Build(workspaceValue workspace.Workspace, team artifacts.TeamDir, state mod
 		if len(effectiveSkills) > 0 {
 			body += renderSkillLinks(worker, effectiveSkills)
 		}
+		description := worker.Description
+		if description == "" {
+			if value, ok := markdown.Metadata["description"].(string); ok {
+				description = value
+			}
+		}
 		modelName := ""
 		if worker.Kind == model.WorkerAgent {
 			modelID := worker.EffectiveModel(state, team.Team.DefaultModel)
@@ -86,7 +92,7 @@ func Build(workspaceValue workspace.Workspace, team artifacts.TeamDir, state mod
 			}
 			modelName = resolvedModelName
 		}
-		frontmatter, err := renderWorkerFrontmatter(worker.Description, modelName)
+		frontmatter, err := renderWorkerFrontmatter(description, modelName)
 		if err != nil {
 			return Plan{}, fmt.Errorf("worker %q: %w", worker.ID, err)
 		}

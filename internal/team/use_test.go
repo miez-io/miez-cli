@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/manuel/miez-cli/internal/workspace"
@@ -43,6 +44,25 @@ func TestInstallInstallsPublicRepoWithNoCredential(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(root, ".miez", "miez.lock.yaml")); err != nil {
 		t.Fatalf("lockfile not written: %v", err)
+	}
+}
+
+func TestInstallRendersAgentDescriptionFromWorkerFrontmatter(t *testing.T) {
+	fake := newFakeGitHub(t)
+	fake.setTeam("acme", "agent-team", "main", "sha1", agentTeamFiles())
+	root := t.TempDir()
+	service := newTestService(root, fake, map[string]string{})
+
+	if _, err := service.Install(context.Background(), []string{"copilot"}, "https://github.com/acme/agent-team"); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(root, ".github", "agents", "architect.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "description: Designs system architecture.\n"; !strings.Contains(string(data), want) {
+		t.Fatalf("installed agent = %q, want %q", data, want)
 	}
 }
 
