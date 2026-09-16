@@ -1,5 +1,4 @@
 ---
-id: user-story
 ---
 # User-story writer
 

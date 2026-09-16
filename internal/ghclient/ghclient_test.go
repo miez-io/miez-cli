@@ -58,7 +58,7 @@ func TestDownloadTarballExtractsArchive(t *testing.T) {
 		gotAuth = r.Header.Get("Authorization")
 		w.Write(buildTarGz(t, map[string]string{
 			"owner-repo-deadbeef/miez.generated.yaml": "id: spec-driven-team\nversion: 1.0.0\nname: Spec Driven\n",
-			"owner-repo-deadbeef/workers/starter.md":  "---\nid: starter\n---\n# Starter\n",
+			"owner-repo-deadbeef/workers/starter.md":  "---\n---\n# Starter\n",
 		}))
 	}))
 	defer server.Close()

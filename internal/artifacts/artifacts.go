@@ -104,6 +104,17 @@ type Markdown struct {
 	Metadata map[string]any
 }
 
+// IDFromPath derives the artifact identity from its location: a skill id is
+// its skills/<skill-id>/ directory name, worker and workflow ids are the
+// Markdown file name without extension.
+func IDFromPath(relativePath string) string {
+	base := filepath.Base(filepath.FromSlash(relativePath))
+	if base == "SKILL.md" {
+		return filepath.Base(filepath.Dir(filepath.FromSlash(relativePath)))
+	}
+	return strings.TrimSuffix(base, filepath.Ext(base))
+}
+
 func readMarkdown(root, relativePath, expectedID string) (Markdown, error) {
 	cleanPath, err := safeRelativePath(relativePath)
 	if err != nil {
@@ -125,8 +136,9 @@ func readMarkdown(root, relativePath, expectedID string) (Markdown, error) {
 	if err != nil {
 		return Markdown{}, fmt.Errorf("parse %s: %w", path, err)
 	}
+	markdown.ID = IDFromPath(cleanPath)
 	if expectedID != "" && markdown.ID != expectedID {
-		return Markdown{}, fmt.Errorf("%s declares id %q, want %q", path, markdown.ID, expectedID)
+		return Markdown{}, fmt.Errorf("%s file name implies id %q, want %q", path, markdown.ID, expectedID)
 	}
 	return markdown, nil
 }
@@ -157,11 +169,10 @@ func parseMarkdown(data []byte) (Markdown, error) {
 	if err := yaml.Unmarshal(frontmatter, &metadata); err != nil {
 		return Markdown{}, fmt.Errorf("frontmatter: %w", err)
 	}
-	id, ok := metadata["id"].(string)
-	if !ok || strings.TrimSpace(id) == "" {
-		return Markdown{}, errors.New("frontmatter requires a non-empty id")
+	if _, ok := metadata["id"]; ok {
+		return Markdown{}, errors.New("frontmatter field \"id\" is not allowed; the id is derived from the file name")
 	}
-	return Markdown{ID: id, Body: string(body), Metadata: metadata}, nil
+	return Markdown{Body: string(body), Metadata: metadata}, nil
 }
 
 func safeRelativePath(value string) (string, error) {

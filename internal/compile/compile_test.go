@@ -236,13 +236,13 @@ workflows: [{id: default, name: Default, path: workflows/default.md, phases: [{i
 	if err := os.WriteFile(filepath.Join(teamRoot, artifacts.TeamIndexFileName), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(teamRoot, "commands", "architect.md"), []byte("---\nid: architect\n---\n# Architect\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(teamRoot, "commands", "architect.md"), []byte("---\n---\n# Architect\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(teamRoot, "workflows"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(teamRoot, "workflows", "default.md"), []byte("---\nid: default\nname: Default\nphases:\n  - id: build\n    workers: [architect]\n---\n# Default\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(teamRoot, "workflows", "default.md"), []byte("---\nname: Default\nphases:\n  - id: build\n    workers: [architect]\n---\n# Default\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	team, err := artifacts.LoadTeam(teamRoot)
@@ -362,13 +362,13 @@ workflows: [{id: default, name: Default, path: workflows/default.md, phases: [{i
 	if err := os.WriteFile(filepath.Join(root, artifacts.TeamIndexFileName), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "commands", "architect.md"), []byte("---\nid: architect\n---\n# Architect\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "commands", "architect.md"), []byte("---\n---\n# Architect\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(root, "workflows"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "workflows", "default.md"), []byte("---\nid: default\nname: Default\nphases:\n  - id: build\n    workers: [architect]\n---\n# Default\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "workflows", "default.md"), []byte("---\nname: Default\nphases:\n  - id: build\n    workers: [architect]\n---\n# Default\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -398,16 +398,16 @@ workflows: [{id: default, name: Default, path: workflows/default.md, phases: [{i
 	if err := os.WriteFile(filepath.Join(root, artifacts.TeamIndexFileName), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "commands", "builder.md"), []byte("---\nid: builder\n---\n# Builder\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "commands", "builder.md"), []byte("---\n---\n# Builder\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "skills", "extra", "SKILL.md"), []byte("---\nid: extra\n---\n# Extra\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "skills", "extra", "SKILL.md"), []byte("---\n---\n# Extra\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(root, "workflows"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "workflows", "default.md"), []byte("---\nid: default\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "workflows", "default.md"), []byte("---\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }

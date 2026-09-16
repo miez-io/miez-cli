@@ -1,5 +1,4 @@
 ---
-id: spec-engineer
 ---
 # Specification engineer
 

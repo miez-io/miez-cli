@@ -11,7 +11,7 @@ import (
 func TestReadWorkerRejectsSymlink(t *testing.T) {
 	root := t.TempDir()
 	outside := filepath.Join(t.TempDir(), "outside.md")
-	if err := os.WriteFile(outside, []byte("---\nid: worker\n---\n# Outside\n"), 0o644); err != nil {
+	if err := os.WriteFile(outside, []byte("---\n---\n# Outside\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Symlink(outside, filepath.Join(root, "worker.md")); err != nil {

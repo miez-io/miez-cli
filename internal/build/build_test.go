@@ -76,14 +76,45 @@ func TestBuildRejectsInvalidWorkflowReference(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsWorkerFrontmatterID(t *testing.T) {
+	root := writePackage(t)
+	workerPath := filepath.Join(root, "workers", "builder.md")
+	data, err := os.ReadFile(workerPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data = []byte(strings.Replace(string(data), "---\nkind: command", "---\nid: starter\nkind: command", 1))
+	if err := os.WriteFile(workerPath, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Build(root); err == nil ||
+		!strings.Contains(err.Error(), `frontmatter field "id" is not allowed`) {
+		t.Fatalf("Build error = %v, want stray frontmatter id rejection", err)
+	}
+}
+
+func TestBuildRejectsSkillFrontmatterID(t *testing.T) {
+	root := writePackage(t)
+	skillPath := filepath.Join(root, "skills", "writing", "SKILL.md")
+	if err := os.WriteFile(skillPath, []byte("---\nid: writing\n---\n# Writing\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Build(root); err == nil ||
+		!strings.Contains(err.Error(), `frontmatter field "id" is not allowed`) {
+		t.Fatalf("Build error = %v, want stray frontmatter id rejection", err)
+	}
+}
+
 func writePackage(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	files := map[string]string{
 		"miez.yaml":               "id: demo-team\nversion: 1.0.0\nname: Demo team\nauthor: tests\n",
-		"workers/builder.md":      "---\nid: builder\nkind: command\nskills: [writing]\n---\n# Builder\n",
-		"skills/writing/SKILL.md": "---\nid: writing\n---\n# Writing\n",
-		"workflows/default.md":    "---\nid: default\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n",
+		"workers/builder.md":      "---\nkind: command\nskills: [writing]\n---\n# Builder\n",
+		"skills/writing/SKILL.md": "---\n---\n# Writing\n",
+		"workflows/default.md":    "---\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n",
 	}
 	for relative, content := range files {
 		path := filepath.Join(root, filepath.FromSlash(relative))

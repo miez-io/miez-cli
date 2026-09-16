@@ -386,16 +386,16 @@ func writeTeam(t *testing.T, name, manifest string) string {
 	if err := os.WriteFile(filepath.Join(root, artifacts.TeamIndexFileName), []byte(manifest), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "commands", "builder.md"), []byte("---\nid: builder\n---\n# Builder\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "commands", "builder.md"), []byte("---\n---\n# Builder\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "skills", "writing", "SKILL.md"), []byte("---\nid: writing\n---\n# Writing\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "skills", "writing", "SKILL.md"), []byte("---\n---\n# Writing\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(root, "workflows"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "workflows", "default.md"), []byte("---\nid: default\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "workflows", "default.md"), []byte("---\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return root

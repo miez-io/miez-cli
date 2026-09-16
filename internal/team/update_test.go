@@ -73,8 +73,8 @@ func TestPlanAndApplyUpdateInstallsNewCommit(t *testing.T) {
 	}
 
 	files := demoTeamFiles("team-a", "Team A")
-	files["team-a/workers/builder.md"] = "---\nid: builder\n---\n# Builder v2\n"
-	files["team-a/workers/extra.md"] = "---\nid: extra\n---\n# Extra\n"
+	files["team-a/workers/builder.md"] = "---\n---\n# Builder v2\n"
+	files["team-a/workers/extra.md"] = "---\n---\n# Extra\n"
 	fake.setTeam("acme", "team-a", "main", "sha2", files)
 
 	plan, err := service.PlanUpdate(context.Background(), "team-a")

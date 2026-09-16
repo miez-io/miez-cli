@@ -1,5 +1,4 @@
 ---
-id: default
 name: Spec to finish
 phases:
   - id: spec

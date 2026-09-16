@@ -1,5 +1,4 @@
 ---
-id: finisher
 ---
 # Finisher
 

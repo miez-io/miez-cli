@@ -233,13 +233,13 @@ func writeSimpleTeam(t *testing.T, root, id string) {
 	if err := os.WriteFile(filepath.Join(root, "miez.yaml"), []byte("id: "+id+"\nversion: 1.0.0\nname: "+id+"\nauthor: test\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "workers", "starter.md"), []byte("---\nid: starter\n---\n# Starter\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "workers", "starter.md"), []byte("---\n---\n# Starter\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(root, "workflows"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "workflows", "default.md"), []byte("---\nid: default\nname: Default\nphases:\n  - id: work\n    workers: [starter]\n---\n# Default\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "workflows", "default.md"), []byte("---\nname: Default\nphases:\n  - id: work\n    workers: [starter]\n---\n# Default\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }

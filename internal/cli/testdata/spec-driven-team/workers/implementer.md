@@ -1,5 +1,4 @@
 ---
-id: implementer
 ---
 # Implementer
 

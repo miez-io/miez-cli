@@ -1,5 +1,4 @@
 ---
-id: spec-writing
 ---
 # Specification writing
 

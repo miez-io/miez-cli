@@ -25,7 +25,6 @@ type Plan struct {
 }
 
 type workerFrontmatter struct {
-	ID          string   `yaml:"id"`
 	Kind        string   `yaml:"kind"`
 	Name        string   `yaml:"name,omitempty"`
 	Description string   `yaml:"description,omitempty"`
@@ -35,14 +34,9 @@ type workerFrontmatter struct {
 }
 
 type workflowFrontmatter struct {
-	ID          string        `yaml:"id"`
 	Name        string        `yaml:"name"`
 	Description string        `yaml:"description,omitempty"`
 	Phases      []model.Phase `yaml:"phases"`
-}
-
-type skillFrontmatter struct {
-	ID string `yaml:"id"`
 }
 
 // Build validates a team package and returns the generated team index bytes.
@@ -174,12 +168,13 @@ func loadWorkers(root string) ([]model.Worker, error) {
 		if err := decodeFrontmatter(markdown.Metadata, &frontmatter, true); err != nil {
 			return nil, fmt.Errorf("worker %s: %w", path, err)
 		}
-		if _, exists := seen[frontmatter.ID]; exists {
-			return nil, fmt.Errorf("duplicate worker id %q", frontmatter.ID)
+		id := artifacts.IDFromPath(path)
+		if _, exists := seen[id]; exists {
+			return nil, fmt.Errorf("duplicate worker id %q", id)
 		}
-		seen[frontmatter.ID] = struct{}{}
+		seen[id] = struct{}{}
 		workers = append(workers, model.Worker{
-			ID:     frontmatter.ID,
+			ID:     id,
 			Kind:   frontmatter.Kind,
 			Path:   path,
 			Model:  frontmatter.Model,
@@ -206,22 +201,15 @@ func loadSkills(root string) ([]model.Skill, error) {
 		if len(parts) != 3 || parts[0] != "skills" || parts[2] != "SKILL.md" {
 			return nil, fmt.Errorf("skill %s must use skills/<skill-id>/SKILL.md", path)
 		}
-		markdown, err := artifacts.ReadMarkdown(root, path)
-		if err != nil {
+		if _, err := artifacts.ReadMarkdown(root, path); err != nil {
 			return nil, fmt.Errorf("skill %s: %w", path, err)
 		}
-		var frontmatter skillFrontmatter
-		if err := decodeFrontmatter(markdown.Metadata, &frontmatter, false); err != nil {
-			return nil, fmt.Errorf("skill %s: %w", path, err)
+		id := artifacts.IDFromPath(path)
+		if _, exists := seen[id]; exists {
+			return nil, fmt.Errorf("duplicate skill id %q", id)
 		}
-		if filepath.Base(filepath.Dir(filepath.FromSlash(path))) != frontmatter.ID {
-			return nil, fmt.Errorf("skill %s directory must match id %q", path, frontmatter.ID)
-		}
-		if _, exists := seen[frontmatter.ID]; exists {
-			return nil, fmt.Errorf("duplicate skill id %q", frontmatter.ID)
-		}
-		seen[frontmatter.ID] = struct{}{}
-		skills = append(skills, model.Skill{ID: frontmatter.ID, Path: path})
+		seen[id] = struct{}{}
+		skills = append(skills, model.Skill{ID: id, Path: path})
 	}
 	sort.Slice(skills, func(left, right int) bool { return skills[left].ID < skills[right].ID })
 	return skills, nil
@@ -243,12 +231,13 @@ func loadWorkflows(root string) ([]model.Workflow, error) {
 		if err := decodeFrontmatter(markdown.Metadata, &frontmatter, true); err != nil {
 			return nil, fmt.Errorf("workflow %s: %w", path, err)
 		}
-		if _, exists := seen[frontmatter.ID]; exists {
-			return nil, fmt.Errorf("duplicate workflow id %q", frontmatter.ID)
+		id := artifacts.IDFromPath(path)
+		if _, exists := seen[id]; exists {
+			return nil, fmt.Errorf("duplicate workflow id %q", id)
 		}
-		seen[frontmatter.ID] = struct{}{}
+		seen[id] = struct{}{}
 		workflows = append(workflows, model.Workflow{
-			ID:     frontmatter.ID,
+			ID:     id,
 			Name:   frontmatter.Name,
 			Path:   path,
 			Phases: append([]model.Phase{}, frontmatter.Phases...),
