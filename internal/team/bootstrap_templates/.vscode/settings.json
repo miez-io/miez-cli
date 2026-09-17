@@ -1,0 +1,13 @@
+{
+  "files.associations": {
+    "**/workers/*.md": "chatagent",
+    "**/workflows/*.md": "instructions",
+    "**/tasks/*.md": "prompt",
+    "**/skills/**/SKILL.md": "skill",
+    "**/rules/*.md": "instructions"
+  },
+  "[chatagent]": {
+    "editor.suggest.showSnippets": true,
+    "editor.snippetSuggestions": "top"
+  }
+}

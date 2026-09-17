@@ -26,6 +26,8 @@ func TestBootstrapCreatesTeamThatCheckAccepts(t *testing.T) {
 	}
 	for _, relative := range []string{
 		"README.md",
+		".vscode/settings.json",
+		".vscode/miez-team.code-snippets",
 		".github/instructions/miez-team-package.instructions.md",
 		".github/prompts/new-worker.prompt.md",
 		".github/prompts/new-skill.prompt.md",
@@ -49,6 +51,27 @@ func TestBootstrapCreatesTeamThatCheckAccepts(t *testing.T) {
 	}
 	if strings.Contains(string(readme), "{{TEAM_ID}}") || !strings.Contains(string(readme), "custom-team") {
 		t.Fatalf("bootstrap README did not resolve the team id: %q", readme)
+	}
+	starterWorker, err := os.ReadFile(filepath.Join(root, "custom-team", "workers", "starter.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(starterWorker), "kind: agent") {
+		t.Fatalf("bootstrapped worker still declares obsolete kind: %q", starterWorker)
+	}
+	settings, err := os.ReadFile(filepath.Join(root, "custom-team", ".vscode", "settings.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(settings), "**/workers/*.md") {
+		t.Fatalf("bootstrapped VS Code settings are incomplete: %q", settings)
+	}
+	snippets, err := os.ReadFile(filepath.Join(root, "custom-team", ".vscode", "miez-team.code-snippets"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(snippets), "miez-worker") {
+		t.Fatalf("bootstrapped VS Code snippets are incomplete: %q", snippets)
 	}
 	if err := app.Execute(context.Background(), []string{"team", "build", "custom-team"}); err != nil {
 		t.Fatal(err)

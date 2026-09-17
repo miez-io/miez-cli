@@ -149,16 +149,16 @@ workflows:
 	}
 }
 
-func TestTeamRejectsUnsupportedModel(t *testing.T) {
-	root := writeTeam(t, "bad-model-team", `
-id: bad-model-team
+func TestTeamAcceptsNativeModelSelector(t *testing.T) {
+	root := writeTeam(t, "native-model-team", `
+id: native-model-team
 version: 1.0.0
-name: Bad model team
+name: Native model team
 workers:
   - id: builder
     kind: agent
     path: commands/builder.md
-    model: gpt5.5
+    model: GPT-5.6 Luna (copilot)
 workflows:
   - id: default
     name: Default
@@ -171,17 +171,17 @@ workflows:
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := Team(team).Error(); err == nil || !strings.Contains(err.Error(), "not supported") {
-		t.Fatalf("error = %v, want unsupported-model validation error", err)
+	if err := Team(team).Error(); err != nil {
+		t.Fatal(err)
 	}
 }
 
-func TestTeamRejectsUnsupportedDefaultModel(t *testing.T) {
-	root := writeTeam(t, "bad-default-model-team", `
-id: bad-default-model-team
+func TestTeamAcceptsNativeDefaultModelSelector(t *testing.T) {
+	root := writeTeam(t, "native-default-model-team", `
+id: native-default-model-team
 version: 1.0.0
-name: Bad default model team
-default_model: gpt5.5
+name: Native default model team
+default_model: GPT-5.6 Luna (copilot)
 workers:
   - id: builder
     kind: agent
@@ -198,8 +198,8 @@ workflows:
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := Team(team).Error(); err == nil || !strings.Contains(err.Error(), "default_model") {
-		t.Fatalf("error = %v, want unsupported default_model validation error", err)
+	if err := Team(team).Error(); err != nil {
+		t.Fatal(err)
 	}
 }
 

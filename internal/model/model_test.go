@@ -89,6 +89,22 @@ func TestFindModelUsesTeamDeclaredModels(t *testing.T) {
 	}
 }
 
+func TestResolveModelPreservesNativeCopilotSelector(t *testing.T) {
+	selector, err := ResolveModel(Team{}, "GPT-5.6 Luna (copilot)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if selector != "GPT-5.6 Luna (copilot)" {
+		t.Fatalf("selector = %q, want native Copilot selector", selector)
+	}
+}
+
+func TestResolveModelRejectsEmptySelector(t *testing.T) {
+	if _, err := ResolveModel(Team{}, " "); err == nil {
+		t.Fatal("ResolveModel accepted an empty selector")
+	}
+}
+
 func TestModelOptionNameForRejectsMissingCopilotName(t *testing.T) {
 	blank := ModelOption{ID: "no-copilot-name"}
 	if _, err := blank.NameFor(); err == nil {

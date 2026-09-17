@@ -81,6 +81,27 @@ func FindModel(team Team, id string) (ModelOption, bool) {
 	return ModelOption{}, false
 }
 
+// IsValidModelSelector reports whether value can be stored as a model
+// selector. Selectors may be miez catalog ids or native Copilot model names
+// copied from VS Code, so availability is resolved by the target at runtime.
+func IsValidModelSelector(value string) bool {
+	return strings.TrimSpace(value) != ""
+}
+
+// ResolveModel returns the Copilot selector for a model value. Legacy miez
+// catalog ids resolve through the team's mapping; native Copilot selectors
+// pass through unchanged so VS Code completion values remain valid inputs.
+func ResolveModel(team Team, value string) (string, error) {
+	value = strings.TrimSpace(value)
+	if !IsValidModelSelector(value) {
+		return "", fmt.Errorf("model selector is empty")
+	}
+	if option, ok := FindModel(team, value); ok {
+		return option.NameFor()
+	}
+	return value, nil
+}
+
 // ModelIDs returns every model id in team's merged catalog, in listing order.
 func ModelIDs(team Team) []string {
 	merged := MergedModels(team)

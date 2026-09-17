@@ -37,12 +37,25 @@ The `.github/` directory in this starter package contains authoring support for
 GitHub Copilot. It is not scanned as an operational worker, skill, or workflow
 and is not added to `miez.generated.yaml`.
 
+The `.vscode/settings.json` file associates miez Markdown artifacts with VS
+Code's built-in `chatagent`, `instructions`, `prompt`, and `skill` languages.
+The `chatagent` language provides agent-file syntax and highlighting; it does
+not provide a miez frontmatter schema or live model completion for arbitrary
+files under `workers/`.
+
+The `.vscode/miez-team.code-snippets` file adds completion snippets for worker
+fields such as `name`, `description`, `model`, `reasoning-effort`, `skills`, and
+MCP `tools`, plus a complete `miez-worker` header snippet. Open the folder containing `miez.yaml`
+as a VS Code workspace folder and ensure a worker file is using the `Agent`
+language mode. The skill and MCP ids are still checked by `miez team build`.
+
 ## Workers
 
 Every worker is a persistent Copilot custom agent. The worker id is the file
-name: `workers/architect.md` becomes `architect`. Use `kind: agent` and assign
-reusable skills with `skills: [skill-id]`; workers may reference declared MCP
-servers with `tools: [mcp-id]`.
+name: `workers/architect.md` becomes `architect`. Assign reusable skills with
+`skills: [skill-id]`; workers may reference declared MCP servers with
+`tools: [mcp-id]`. The legacy `kind: agent` field is optional, accepted for
+compatibility, and omitted from newly generated catalogs.
 
 Keep durable identity, motivation, goals, beliefs, and boundaries in the worker
 body. Put repeatable procedures and technology-specific methods in skills.
@@ -52,8 +65,7 @@ Example:
 
 ```markdown
 ---
-kind: agent
-model: gpt-5
+model: GPT-5 (copilot)
 skills: [architecture]
 ---
 # Architect

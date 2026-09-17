@@ -73,22 +73,12 @@ func Build(workspaceValue workspace.Workspace, team artifacts.TeamDir, state mod
 		if len(effectiveSkills) > 0 {
 			body += renderSkillLinks(worker, effectiveSkills)
 		}
-		description := worker.Description
-		if description == "" {
-			if value, ok := markdown.Metadata["description"].(string); ok {
-				description = value
-			}
-		}
 		modelID := worker.EffectiveModel(state, team.Team.DefaultModel)
-		option, ok := model.FindModel(team.Team, modelID)
-		if !ok {
-			return Plan{}, fmt.Errorf("worker %q: unsupported model %q; choose one of: %s", worker.ID, modelID, strings.Join(model.ModelIDs(team.Team), ", "))
-		}
-		modelName, err := option.NameFor()
+		modelName, err := model.ResolveModel(team.Team, modelID)
 		if err != nil {
 			return Plan{}, fmt.Errorf("worker %q: %w", worker.ID, err)
 		}
-		frontmatter, err := renderPromptFrontmatter(description, modelName)
+		frontmatter, err := renderWorkerFrontmatter(markdown.Metadata, worker.Description, modelName)
 		if err != nil {
 			return Plan{}, fmt.Errorf("worker %q: %w", worker.ID, err)
 		}
@@ -380,6 +370,36 @@ func workerPath(worker model.Worker) string {
 
 func taskPath(task model.Task) string {
 	return filepath.ToSlash(filepath.Join(".github", "prompts", "task-"+task.ID+".prompt.md"))
+}
+
+var workerCustomFrontmatterFields = map[string]struct{}{
+	"kind":   {},
+	"skills": {},
+	"tools":  {},
+}
+
+func renderWorkerFrontmatter(metadata map[string]any, fallbackDescription, modelName string) (string, error) {
+	values := make(map[string]any, len(metadata)+2)
+	for key, value := range metadata {
+		if _, custom := workerCustomFrontmatterFields[key]; custom {
+			continue
+		}
+		values[key] = value
+	}
+	if _, exists := values["description"]; !exists && fallbackDescription != "" {
+		values["description"] = fallbackDescription
+	}
+	if modelName != "" {
+		values["model"] = modelName
+	}
+	if len(values) == 0 {
+		return "", nil
+	}
+	data, err := yaml.Marshal(values)
+	if err != nil {
+		return "", fmt.Errorf("encode worker frontmatter: %w", err)
+	}
+	return fmt.Sprintf("---\n%s---\n\n", data), nil
 }
 
 func renderPromptFrontmatter(description, modelName string) (string, error) {

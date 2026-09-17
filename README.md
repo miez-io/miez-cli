@@ -161,13 +161,41 @@ frontmatter field:
 
 ```yaml
 ---
-kind: agent
+name: Architect
+description: Designs system architecture.
 model: claude-sonnet-4.5
+reasoning-effort: xhigh
 skills: [architecture]
 tools: [github]
 ---
 Describe the worker persona and behavior here.
 ```
+
+Workers always render as GitHub Copilot custom agents, so no `kind` field is
+required. Miez consumes `skills` and MCP `tools` as package configuration,
+applies the effective `model`, and copies the remaining provider frontmatter
+fields into `.github/agents/<id>.md`. This preserves fields such as `name`,
+`description`, and `reasoning-effort` without requiring miez to maintain an
+allowlist of provider headers. A legacy `kind: agent` field is accepted while
+older packages are migrated but is omitted from new generated indexes.
+
+Bootstrapped packages include `.vscode/settings.json`, which associates miez
+artifact files with VS Code's built-in prompt languages. The `chatagent`
+language provides agent-file syntax and highlighting; it does not provide a
+miez frontmatter schema or live model completion for arbitrary files under
+`workers/`.
+
+The accompanying `.vscode/miez-team.code-snippets` provides completion snippets
+for the miez worker fields. Open the folder containing `miez.yaml` as a VS Code
+workspace folder, ensure the file's language mode is `Agent`, and reload the
+window after bootstrapping a team if the snippets do not appear. Type
+`miez-worker` for a complete header or a field name such as `skills` and press
+Tab/Enter to insert its snippet.
+
+The `model` field accepts a miez model id or a native Copilot selector such as
+`GPT-5.6 Luna (copilot)`. Miez validates that the selector is non-empty; it
+does not know which model names a particular VS Code installation exposes.
+`miez team build` remains authoritative for skill and MCP ids.
 
 ```yaml
 ---
@@ -192,8 +220,9 @@ generated index unchanged. Once installed, miez uses `miez.generated.yaml` for w
 worker, skill, task, model, and MCP catalog information without rediscovering
 authoring frontmatter.
 
-`miez team bootstrap` also creates a README and a package-local Copilot
-authoring support bundle under `.github/`: a package-contract instruction,
+`miez team bootstrap` also creates a README, package-local VS Code settings and
+snippets under `.vscode/`, and a Copilot authoring support bundle under
+`.github/`: a package-contract instruction,
 prompts for adding a worker, skill, task, or workflow, a `write-workers` skill
 carrying the strict worker template, and a `review-team-package` skill with a
 build-error reference. These support files help authors maintain valid team
@@ -214,7 +243,6 @@ skills:
     path: skills/architecture/SKILL.md
 workers:
   - id: architect
-    kind: agent
     path: workers/architect.md
     model: claude-sonnet-4.5
     skills: [architecture]
@@ -231,10 +259,10 @@ workflows:
         workers: [architect]
 ```
 
-Every worker uses `kind: agent` and may have a model. A worker model overrides the team's
-`default_model`, which falls back to a built-in default. Team-declared models
-use stable ids and a `copilot` mapping; provider-specific names never appear
-in worker frontmatter.
+Every worker renders as an agent and may have a model. A worker model overrides
+the team's `default_model`, which falls back to a built-in default. Team-
+declared models use stable ids and a `copilot` mapping; the compiler resolves
+the effective selector and retains the other provider frontmatter fields.
 
 Skills may contain supporting assets and references. The package compiler uses
 the canonical `skills/<skill-id>/SKILL.md` file as the skill catalog entry and

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -44,8 +43,8 @@ func (app *App) newWorkerModelListCommand() *cobra.Command {
 
 func (app *App) newWorkerModelSetCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "set <worker-id> <model-id>",
-		Short: "switch a worker agent to a different model",
+		Use:   "set <worker-id> <model-selector>",
+		Short: "switch a worker agent to a different model selector",
 		Args:  exactArgs(2),
 		ValidArgsFunction: func(command *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			_, team, _, err := app.activeTeam()
@@ -73,15 +72,15 @@ func (app *App) newWorkerModelSetCommand() *cobra.Command {
 			if !ok {
 				return fmt.Errorf("team %q has no worker %q", team.Team.ID, args[0])
 			}
-			modelID := args[1]
-			if _, ok := model.FindModel(team.Team, modelID); !ok {
-				return fmt.Errorf("model %q is not supported; choose one of: %s", modelID, strings.Join(model.ModelIDs(team.Team), ", "))
+			modelSelector := args[1]
+			if !model.IsValidModelSelector(modelSelector) {
+				return fmt.Errorf("model selector must not be empty")
 			}
-			state.SetWorkerModel(worker.ID, modelID)
+			state.SetWorkerModel(worker.ID, modelSelector)
 			if err := app.teams.PersistMutation(workspaceValue, team, state, ""); err != nil {
 				return err
 			}
-			fmt.Fprintf(command.OutOrStdout(), "worker model set: %s -> %s\n", worker.ID, modelID)
+			fmt.Fprintf(command.OutOrStdout(), "worker model set: %s -> %s\n", worker.ID, modelSelector)
 			return nil
 		},
 	}

@@ -1,5 +1,5 @@
 ---
-description: "miez team package contract. Use when creating or editing miez.yaml, workers/, skills/, tasks/, workflows/, or rules/, when running miez team build, or when a build or check fails. Covers frontmatter schemas, id rules, model ids, and what miez renders for Copilot."
+description: "miez team package contract. Use when creating or editing miez.yaml, workers/, skills/, tasks/, workflows/, or rules/, when running miez team build, or when a build or check fails. Covers frontmatter fields, id rules, model ids, and what miez renders for Copilot."
 applyTo: ["miez.yaml", "miez.generated.yaml", "workers/**", "skills/**", "tasks/**", "workflows/**", "rules/**"]
 ---
 
@@ -36,18 +36,23 @@ authoring this package, use `miez team build .`.
 
 ## Frontmatter schemas
 
-Worker frontmatter is strict — an unknown field fails the build. Every worker
-is a Copilot custom agent; the worker id is the file name
-(`workers/architect.md` becomes `architect`); `id` is not a frontmatter field.
+Worker frontmatter contains miez-owned fields and optional provider fields. The
+worker id is the file name (`workers/architect.md` becomes `architect`); `id` is
+not a frontmatter field. Every worker renders as a Copilot custom agent, so
+provider fields such as `name`, `description`, `model`, `reasoning-effort`, and
+future supported header fields are copied to the generated agent.
+Miez consumes `skills` and MCP `tools`; those fields are not copied. The legacy
+`kind: agent` field is accepted for compatibility but is no longer required and
+is never generated.
 
 ```yaml
 ---
-kind: agent          # required: every worker is an agent
-model: gpt-5         # optional; defaults to the team model
-skills: [architecture]  # optional; ids that exist under skills/
-tools: [github]      # optional; ids declared in miez.yaml mcp:
-name: Architect      # optional, human-readable only
-description: ...     # optional, human-readable only
+name: Architect
+description: ...
+model: gpt-5
+reasoning-effort: xhigh
+skills: [architecture]  # miez-owned skill ids
+tools: [github]         # miez-owned MCP ids
 ---
 ```
 
@@ -91,26 +96,38 @@ description: ...
   a skill folder (`assets/`, `references/`) are ignored by the build.
 - Never declare `id` in artifact frontmatter — worker, skill, and workflow
   ids are derived from the file path, and a stray `id` field fails the build.
-- `skills:` and `tools:` must reference things that already exist.
+- `skills:` and miez `tools:` must reference things that already exist.
 - An agent's model must resolve in the merged catalog: built-ins are `gpt-5`
   (default), `gpt-5.1`, `claude-sonnet-4.5`, `claude-opus-4.5`, `gemini-3-pro`.
   A team adds or overrides ids in `miez.yaml` with a `copilot:` mapping.
 - `miez.generated.yaml` metadata, models, and MCP must still match `miez.yaml`.
 
+The package also includes `.vscode/settings.json`, which associates worker,
+workflow, task, skill, and rule source with VS Code's built-in prompt languages.
+The `chatagent` language provides syntax and highlighting, but not a miez
+frontmatter schema or live model completion for arbitrary `workers/*.md` files.
+
+The package's `.vscode/miez-team.code-snippets` adds templates for worker
+frontmatter, including miez-only fields. Open the folder containing `miez.yaml`
+as a VS Code workspace folder and use the `Agent` language mode if the
+association is not picked up. It does not know the current skill or MCP ids;
+use `miez team build` for the authoritative cross-reference check.
+
 ## What miez renders
 
-miez strips frontmatter and renders the Markdown **body**:
+miez consumes miez-owned frontmatter and renders the Markdown **body**. Worker
+provider frontmatter is retained in the generated Copilot agent:
 
 | Artifact | Output |
 |---|---|
-| worker agent | `.github/agents/<id>.md`, with the resolved Copilot model prepended |
+| worker agent | `.github/agents/<id>.md`, with provider frontmatter copied, miez-owned fields removed, and the effective Copilot model applied |
 | task | `.github/prompts/task-<id>.prompt.md` |
 | assigned skill | `.github/skills/<skill-id>/SKILL.md`, linked from the worker |
 | selected workflow | `.github/instructions/miez-workflow.instructions.md` |
 | `rules/*.md` | `.github/instructions/miez-rules.instructions.md` |
 
-Because frontmatter is dropped, the body must stand on its own: open a worker
-with its role, not with a bare "Describe this worker".
+Because miez-owned frontmatter is consumed, the body must stand on its own:
+open a worker with its role, not with a bare "Describe this worker".
 
 ## Separation
 

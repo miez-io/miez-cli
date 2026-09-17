@@ -1,7 +1,6 @@
 ---
 name: Worker Name
 description: One-sentence description of this worker's responsibility.
-kind: agent
 ---
 
 # Worker Name
@@ -16,12 +15,11 @@ Adapt this combination to the task at hand instead of assuming one fixed
 workflow or deliverable.
 
 The file name `workers/<worker-id>.md` is the worker id — there is no `id`
-frontmatter field. `kind: agent` is required because every worker renders as a
-Copilot custom agent. `model: <model-id>` is optional and names an id declared
-in `miez.yaml`'s `models:` list or a miez built-in id. `name` and `description`
-are optional and accepted, but miez does not copy `name` into
-`miez.generated.yaml`; keep the real, load-bearing identity in the body below,
-not in frontmatter.
+frontmatter field. Every worker renders as a Copilot custom agent. `model:
+<model-id>` is optional and names an id declared in `miez.yaml`'s `models:` list
+or a miez built-in id. Provider fields such as `name`, `description`, and
+`reasoning-effort` are retained in the generated agent. Miez consumes `skills`
+and MCP `tools` without copying them into the provider frontmatter.
 
 ## Identity
 

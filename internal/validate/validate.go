@@ -151,10 +151,10 @@ func Team(team artifacts.TeamDir) Result {
 		}
 	}
 	if defaultModel := strings.TrimSpace(team.Team.DefaultModel); defaultModel != "" {
-		if _, ok := model.FindModel(team.Team, defaultModel); !ok {
+		if !model.IsValidModelSelector(defaultModel) {
 			result.Issues = append(result.Issues, Issue{
 				Path:    manifestPath,
-				Message: fmt.Sprintf("default_model %q is not supported; choose one of: %s", defaultModel, strings.Join(model.ModelIDs(team.Team), ", ")),
+				Message: "default_model must not be empty",
 			})
 		}
 	}
@@ -177,14 +177,14 @@ func Team(team artifacts.TeamDir) Result {
 			result.Issues = append(result.Issues, Issue{Path: path, Message: fmt.Sprintf("duplicate worker id %q", worker.ID)})
 		}
 		workers[worker.ID] = worker
-		if worker.Kind != model.WorkerAgent {
-			result.Issues = append(result.Issues, Issue{Path: path, Message: fmt.Sprintf("kind %q is not supported; workers must use kind: agent", worker.Kind)})
+		if kind := strings.TrimSpace(worker.Kind); kind != "" && kind != model.WorkerAgent {
+			result.Issues = append(result.Issues, Issue{Path: path, Message: fmt.Sprintf("kind %q is not supported; workers render as Copilot agents", kind)})
 		}
 		effectiveModel := worker.EffectiveModel(model.TeamState{}, team.Team.DefaultModel)
-		if _, ok := model.FindModel(team.Team, effectiveModel); !ok {
+		if !model.IsValidModelSelector(effectiveModel) {
 			result.Issues = append(result.Issues, Issue{
 				Path:    path,
-				Message: fmt.Sprintf("model %q is not supported; choose one of: %s", effectiveModel, strings.Join(model.ModelIDs(team.Team), ", ")),
+				Message: "model selector must not be empty",
 			})
 		}
 		for _, toolID := range worker.Tools {

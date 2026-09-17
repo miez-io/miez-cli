@@ -25,7 +25,9 @@ type Plan struct {
 }
 
 type workerFrontmatter struct {
-	Kind        string   `yaml:"kind"`
+	// Kind is a legacy compatibility field. It is validated when present but
+	// never copied into the generated worker catalog.
+	Kind        string   `yaml:"kind,omitempty"`
 	Name        string   `yaml:"name,omitempty"`
 	Description string   `yaml:"description,omitempty"`
 	Model       string   `yaml:"model,omitempty"`
@@ -153,8 +155,8 @@ func validatePackageModels(team model.Team) error {
 		}
 	}
 	if team.DefaultModel != "" {
-		if _, ok := model.FindModel(team, team.DefaultModel); !ok {
-			return fmt.Errorf("default_model %q is not supported", team.DefaultModel)
+		if !model.IsValidModelSelector(team.DefaultModel) {
+			return fmt.Errorf("default_model must not be empty")
 		}
 	}
 	return nil
@@ -173,8 +175,11 @@ func loadWorkers(root string) ([]model.Worker, error) {
 			return nil, fmt.Errorf("worker %s: %w", path, err)
 		}
 		var frontmatter workerFrontmatter
-		if err := decodeFrontmatter(markdown.Metadata, &frontmatter, true); err != nil {
+		if err := decodeFrontmatter(markdown.Metadata, &frontmatter, false); err != nil {
 			return nil, fmt.Errorf("worker %s: %w", path, err)
+		}
+		if kind := strings.TrimSpace(frontmatter.Kind); kind != "" && kind != model.WorkerAgent {
+			return nil, fmt.Errorf("worker %s: kind %q is not supported; workers render as Copilot agents", path, kind)
 		}
 		id := artifacts.IDFromPath(path)
 		if _, exists := seen[id]; exists {
@@ -183,7 +188,6 @@ func loadWorkers(root string) ([]model.Worker, error) {
 		seen[id] = struct{}{}
 		workers = append(workers, model.Worker{
 			ID:          id,
-			Kind:        frontmatter.Kind,
 			Path:        path,
 			Description: frontmatter.Description,
 			Model:       frontmatter.Model,

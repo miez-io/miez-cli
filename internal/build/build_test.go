@@ -29,6 +29,9 @@ func TestBuildGeneratesDeterministicCatalogFromFrontmatter(t *testing.T) {
 	if first.Team.Workers[0].Description != "Builds implementation prompts." {
 		t.Fatalf("worker description = %q", first.Team.Workers[0].Description)
 	}
+	if first.Team.Workers[0].Kind != "" {
+		t.Fatalf("worker kind = %q, want omitted from new generated catalogs", first.Team.Workers[0].Kind)
+	}
 	if first.Team.Workers[0].Skills[0] != "writing" {
 		t.Fatalf("worker skills = %#v", first.Team.Workers[0].Skills)
 	}
@@ -44,6 +47,9 @@ func TestBuildGeneratesDeterministicCatalogFromFrontmatter(t *testing.T) {
 	if !strings.Contains(string(first.Data), "description: Builds implementation prompts.") {
 		t.Fatal("generated catalog omitted worker description")
 	}
+	if strings.Contains(string(first.Data), "\n    kind:") {
+		t.Fatal("generated catalog retained the obsolete worker kind field")
+	}
 	if !strings.Contains(string(first.Data), "path: tasks/analyze.md") {
 		t.Fatal("generated catalog omitted task path")
 	}
@@ -57,6 +63,30 @@ func TestBuildGeneratesDeterministicCatalogFromFrontmatter(t *testing.T) {
 	}
 	if team.Team.ID != "demo-team" || len(team.Team.Skills) != 1 {
 		t.Fatalf("loaded team = %#v", team.Team)
+	}
+}
+
+func TestBuildOmitsLegacyWorkerKind(t *testing.T) {
+	root := writePackage(t)
+	workerPath := filepath.Join(root, "workers", "builder.md")
+	data, err := os.ReadFile(workerPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data = []byte(strings.Replace(string(data), "---\ndescription:", "---\nkind: agent\ndescription:", 1))
+	if err := os.WriteFile(workerPath, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	plan, err := Build(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plan.Team.Workers[0].Kind != "" {
+		t.Fatalf("worker kind = %q, want legacy kind omitted", plan.Team.Workers[0].Kind)
+	}
+	if strings.Contains(string(plan.Data), "\n    kind:") {
+		t.Fatalf("generated catalog retained legacy worker kind: %s", plan.Data)
 	}
 }
 
@@ -95,7 +125,7 @@ func TestBuildRejectsWorkerFrontmatterID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data = []byte(strings.Replace(string(data), "---\nkind: agent", "---\nid: starter\nkind: agent", 1))
+	data = []byte(strings.Replace(string(data), "---\ndescription:", "---\nid: starter\ndescription:", 1))
 	if err := os.WriteFile(workerPath, data, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +154,7 @@ func writePackage(t *testing.T) string {
 	root := t.TempDir()
 	files := map[string]string{
 		"miez.yaml":               "id: demo-team\nversion: 1.0.0\nname: Demo team\nauthor: tests\n",
-		"workers/builder.md":      "---\nkind: agent\ndescription: Builds implementation prompts.\nskills: [writing]\n---\n# Builder\n",
+		"workers/builder.md":      "---\ndescription: Builds implementation prompts.\nreasoning-effort: xhigh\nskills: [writing]\n---\n# Builder\n",
 		"skills/writing/SKILL.md": "---\n---\n# Writing\n",
 		"tasks/analyze.md":        "---\ndescription: Analyze the existing solution.\n---\n# Analyze\n",
 		"workflows/default.md":    "---\nname: Default\nphases:\n  - id: build\n    workers: [builder]\n---\n# Default\n",

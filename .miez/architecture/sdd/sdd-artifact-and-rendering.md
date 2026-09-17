@@ -12,6 +12,7 @@ SRS IDs this design satisfies:
 - `artifact/model-catalog-uses-stable-ids`
 - `artifact/markdown-contract-is-enforced`
 - `artifact/frontmatter-declares-cli-configuration`
+- `artifact/worker-frontmatter-is-provider-compatible`
 - `artifact/workflow-artifacts-are-discoverable`
 - `team-authoring/build-produces-installable-package`
 - `check/validates-team-artifacts`
@@ -31,6 +32,7 @@ SRS IDs this design satisfies:
 - `determinism/local-rendering-is-repeatable`
 - `security/remote-input-is-bounded-and-path-safe`
 - `team-authoring/bootstrap-includes-guided-authoring-support`
+- `team-authoring/bootstrap-copies-editor-support`
 - `team-authoring/support-files-are-not-operational-artifacts`
 - `team-authoring/installed-source-retains-support-files`
 
@@ -87,8 +89,8 @@ they remain in `.miez/config.yaml`.
 - copied package identity and descriptive metadata;
 - model catalog and MCP declarations from the package manifest;
 - `skills[]` entries with id and source path;
-- `workers[]` entries with id, kind, derived source path, optional model,
-  skill ids, and MCP tool ids;
+- `workers[]` entries with id, derived source path, optional model, skill ids,
+  and MCP tool ids;
 - `tasks[]` entries with id, derived source path, and description;
 - `workflows[]` entries with id, display name, source path, and ordered phases
   containing worker ids or explicit worker/task assignments.
@@ -100,10 +102,12 @@ reconstruct missing relationships.
 
 ### 3.3 Frontmatter and build inputs
 
-Worker frontmatter declares `kind: agent` and optional `skills`, `model`, and
-MCP `tools`; every worker renders as a Copilot agent. Task frontmatter declares
-an optional `description`; it does not bind the task to a worker. Skill identity
-is derived from its directory.
+Worker frontmatter declares optional miez `skills`, `model`, and MCP `tools`
+fields; every worker renders as a Copilot agent without requiring a kind field.
+Provider frontmatter is accepted without a miez allowlist. The legacy
+`kind: agent` field remains readable during migration but is omitted from new
+generated indexes. Task frontmatter declares an optional `description`; it does
+not bind the task to a worker. Skill identity is derived from its directory.
 Workflow frontmatter declares its display `name` and ordered `phases`; each
 phase may use worker ids or explicit worker/task assignments. Artifact paths
 are derived from their locations and written into the generated index. Markdown
@@ -146,7 +150,7 @@ For the current Copilot target, the compiler maps effective artifacts to:
 
 | Input | Managed output |
 |---|---|
-| worker agent | `.github/agents/<id>.md` with Copilot model frontmatter |
+| worker agent | `.github/agents/<id>.md` with copied provider frontmatter, miez-owned fields removed, and the effective Copilot model |
 | worker-neutral task | `.github/prompts/task-<id>.prompt.md` |
 | effective skill | `.github/skills/<skill-id>/SKILL.md` and a relative Markdown link in each using worker |
 | `rules/*.md` | `.github/instructions/miez-rules.instructions.md` |
@@ -166,11 +170,13 @@ compilation summary below `.miez/`.
 
 A bootstrapped team source includes a README and a fixed set of Copilot-native
 authoring helpers. The helpers explain and enforce the team authoring boundary:
-worker persona versus reusable skill, workflow registration, the target
-agent-only worker contract, frontmatter, and the distinction between authored
-metadata and the generated team index. The always-on authoring instruction is
-separate from workflow routing, just as operational team rules are separate
-from workflow routing.
+worker persona versus reusable skill, workflow registration, the target agent-only
+worker contract, provider versus miez-owned frontmatter, and the distinction between
+authored metadata and the generated team index. The always-on authoring instruction
+is separate from workflow routing, just as operational team rules are separate from
+workflow routing. The bootstrap payload also includes the package-local
+`.vscode/settings.json` and `.vscode/miez-team.code-snippets` files; the bootstrap
+walker copies hidden regular files as part of the source bundle.
 
 These support files are package content, not `model.Team` entities. The builder
 does not derive worker, skill, task, or workflow entries from them, and the generated

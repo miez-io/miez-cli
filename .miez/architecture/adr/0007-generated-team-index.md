@@ -44,8 +44,9 @@ A team authoring package contains:
 
 - `miez.yaml` for team metadata, author information, version, model catalog,
   default model, and MCP declarations;
-- `workers/` Markdown files whose frontmatter declares worker id, kind, skills,
-  model, and MCP tools;
+- `workers/` Markdown files whose frontmatter declares worker id, optional
+  miez skills, model, and MCP tools; provider frontmatter remains available to
+  the Copilot renderer;
 - `skills/` Markdown files whose frontmatter declares skill identity;
 - `workflows/` Markdown files whose frontmatter declares workflow identity,
   display name, and ordered worker phases.

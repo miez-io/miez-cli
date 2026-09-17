@@ -1,13 +1,3 @@
----
-name: write-sdd
-description: Write a software design description (SDD) for one structured piece using IEEE 1016 viewpoints and C4 component views. Use when defining schema, interfaces, runtime steps, or scaling before implementation.
-license: MIT
-compatibility: GitHub Copilot and other Agent Skills clients
-metadata:
-  version: "1.0"
-  standards: IEEE 1016, C4
----
-
 # Write an SDD
 
 An SDD is the **building blueprint** for one piece. When relevant SRS

@@ -67,8 +67,10 @@ type MCPServer struct {
 // Worker points at one Copilot custom-agent Markdown artifact. Tools references
 // ids declared in the owning team's MCP list.
 type Worker struct {
-	ID          string   `yaml:"id"`
-	Kind        string   `yaml:"kind"`
+	ID string `yaml:"id"`
+	// Kind is retained only so older generated indexes remain readable. New
+	// packages do not declare or generate it; every worker renders as an agent.
+	Kind        string   `yaml:"kind,omitempty"`
 	Path        string   `yaml:"path"`
 	Description string   `yaml:"description,omitempty"`
 	Model       string   `yaml:"model,omitempty"`

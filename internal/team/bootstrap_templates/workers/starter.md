@@ -1,5 +1,4 @@
 ---
-kind: agent
 skills: [writing]
 ---
 # Starter worker

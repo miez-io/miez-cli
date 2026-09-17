@@ -20,8 +20,8 @@ it does not restructure artifacts on its own.
    matching its folder.
 4. Confirm every `skills:` and `tools:` reference on a worker resolves, and
    that every workflow phase lists existing worker ids.
-5. Confirm every worker uses `kind: agent` and every agent model resolves in
-   the merged catalog.
+5. Confirm every worker renders as an agent and every effective model selector
+   is non-empty.
 6. Read each worker body as if the frontmatter were gone, which is how Copilot
    receives it. Flag placeholder text, missing persona sections, and anything
    that reads like workflow choreography.

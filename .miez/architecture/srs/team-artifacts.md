@@ -110,9 +110,10 @@ manual entry for that artifact in `miez.generated.yaml`.
 
 Acceptance:
 
-- WHEN a worker declares `id`, `kind`, and optional `skills`, `model`, or MCP
-  tools THEN the generated worker entry contains those values and its source
-  path.
+- WHEN a worker declares optional miez fields `skills`, `model`, or MCP `tools`
+  THEN the generated worker entry contains those values and its source path.
+- WHEN a worker contains provider frontmatter fields THEN the build accepts
+  those fields without requiring miez to duplicate the provider schema.
 - WHEN a workflow declares its id, display name, and ordered worker phases
   THEN the generated workflow entry contains those values and its source path.
 - WHEN a task declares its description THEN the generated task entry contains
@@ -121,6 +122,23 @@ Acceptance:
   fixed source path.
 - WHEN an artifact has duplicate or conflicting metadata THEN the build fails
   and identifies the artifact and field.
+
+#### `artifact/worker-frontmatter-is-provider-compatible`
+
+When a worker is authored for the supported Copilot target, the system shall
+allow provider frontmatter to evolve independently from miez-owned worker
+configuration.
+
+Acceptance:
+
+- WHEN a worker omits `kind` THEN the build succeeds and the generated worker
+  catalog omits that obsolete field.
+- WHEN a worker contains provider fields such as `name`, `description`,
+  `model`, or `reasoning-effort` THEN those fields remain available to the
+  renderer.
+- WHEN a legacy worker declares `kind: agent` THEN the package remains
+  readable during migration, but the field is not generated into new indexes.
+- WHEN a legacy worker declares another kind THEN the build fails clearly.
 
 #### `artifact/workflow-artifacts-are-discoverable`
 
@@ -180,9 +198,24 @@ Acceptance:
   always-on authoring instruction, user-invocable worker and skill prompts, a
   facilitator agent, and reusable authoring skills.
 - WHEN a team author reads the guide THEN it explains the CLI lifecycle,
-  worker-agent contract, required frontmatter, skill assignment, task
+  worker-agent contract, provider and miez-owned frontmatter, skill assignment, task
   invocation, workflow membership, and the distinction between authored files
   and the generated team index.
+
+#### `team-authoring/bootstrap-copies-editor-support`
+
+When an operator bootstraps a team, the system shall include the package-local
+VS Code settings and snippets needed to author the Markdown artifacts.
+
+Acceptance:
+
+- WHEN bootstrap completes THEN `.vscode/settings.json` and
+  `.vscode/miez-team.code-snippets` exist in the new team directory.
+- WHEN a worker is opened in VS Code THEN the settings associate it with the
+  built-in agent language and the snippets expose the worker frontmatter
+  templates.
+- WHEN the package is installed or audited THEN these regular support files
+  remain part of the source module and lockfile inventory.
 
 #### `team-authoring/support-files-are-not-operational-artifacts`
 

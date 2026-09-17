@@ -25,7 +25,9 @@ provider-neutral where possible.
 ## 3. Non-goals
 
 - The compiler does not execute prompts or workflows.
-- A team does not name provider-specific model values as its stable contract.
+- A team's catalog uses stable model ids where it declares a model mapping;
+  worker frontmatter may also retain a provider-native selector for the
+  supported Copilot target.
 - Rules and workflow routing are not treated as the same kind of authored input.
 
 ## 4. Requirements
@@ -71,6 +73,23 @@ Acceptance:
   second copy of that skill's Markdown body.
 - WHEN a skill is removed through a local override THEN its link is absent from
   the worker while the remaining skill links stay valid.
+
+#### `render-contract/worker-frontmatter-is-preserved`
+
+When a worker is rendered for GitHub Copilot, the system shall preserve the
+worker's provider frontmatter while excluding miez-owned configuration fields.
+
+Acceptance:
+
+- WHEN a worker contains provider fields such as `name`, `description`,
+  `model`, or `reasoning-effort` THEN the generated `.github/agents/<id>.md`
+  contains those fields.
+- WHEN miez applies a worker model override or team default THEN the generated
+  `model` field contains the effective Copilot selector.
+- WHEN a worker contains miez-owned `skills`, MCP `tools`, or legacy `kind`
+  fields THEN those fields are not copied into the generated agent header.
+- WHEN a provider adds another supported frontmatter field THEN miez copies it
+  without a renderer allowlist change.
 
 #### `render-contract/rules-are-a-separate-always-on-instruction-from-workflow-routing`
 

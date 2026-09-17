@@ -25,7 +25,7 @@ Here is my vision for miez-cli:
     - workflow use = pick which of the team's workflows is active; exactly one workflow is always active for the active team and is installed as an always-on GitHub Copilot instruction
     - workflow worker enable/disable <worker-name> = adjust which workers participate in the active workflow without editing the team's files
     - worker skill add/remove <worker-name> <skill-name> = assign or remove a skill from a worker
-    - worker model list/set <worker-name> <model-name> = list the models a `kind: agent` worker can use, and switch one, without caring how vscode or cursor spell that model's name internally
+    - worker model list/set <worker-name> <model-name> = list the models a worker can use, and switch one, without caring how vscode or cursor spell that model's name internally
     - check = validate that a team's artifacts are miez-CLI compatible
 - So the CLI is only for managing Team -> Worker -> Workflow Artifacts and their generated catalog. Artifact bodies are Markdown; package metadata is `miez.yaml`; `miez.generated.yaml` is generated, not manually authored.
 - Artifacts can be downloaded from a GitHub repo or initialized locally where miez is installed. A team package is authored with `miez.yaml`, `workflows/`, `workers/`, and `skills/`; `miez team build` generates the installable `miez.generated.yaml`. A downloaded package is placed under `.miez/miez_modules/<team-id>/`, with its lock record at `.miez/miez.lock.yaml`. One repo or branch can host several teams side by side, each selected by a path in the GitHub URL; a repo/branch with no path must resolve to exactly one generated `miez.generated.yaml`.
@@ -74,10 +74,12 @@ Here is my vision for miez-cli:
 - Allows sub-command `skill add <worker-name> <skill-name>` for assigning a new skill to the worker
 - Allows sub-command `skill remove <worker-name> <skill-name>` for removing a skill from the worker
 - A worker's effective skills are rendered as links to the canonical Copilot skill files, with a generic Skills section directing Copilot to read and follow them. This lets the user customize worker capabilities without duplicating skill bodies in every worker artifact.
-- Every worker is a persistent custom agent with `kind: agent`; prompt-only workers are not supported. Every worker may use a model.
+- Every worker is a persistent custom agent; prompt-only workers are not supported. Every worker may use a model.
 - Allows sub-command `model list` to show which model ids are usable right now (the active team's resolved catalog, or just the built-in ids if no team is active)
-- Allows sub-command `model set <worker-name> <model-name>` to switch a `kind: agent` worker to a different model at any time, without editing the team's files. Both arguments are shell-tab-completable
-- Workers and teams reference miez's stable model ids, never provider-specific names. The Copilot mapping is resolved when the generated output is rendered, and a missing Copilot mapping fails the build.
+- Allows sub-command `model set <worker-name> <model-name>` to switch a worker to a different model at any time, without editing the team's files. Both arguments are shell-tab-completable
+- Teams may use miez's stable model ids or a native provider selector in worker
+    frontmatter. Stable ids resolve through the Copilot mapping; native selectors
+    pass through unchanged, and an empty selector fails the build.
 - miez ships a small built-in list of model ids, but a team is never limited to it: a team's own config can add ids the moment a provider ships them, or correct/override a built-in id's mapping, so extending the model list never requires a new miez release
 
 ### check
@@ -96,7 +98,7 @@ Here is my vision for miez-cli:
 - The authored package contract is `miez.yaml` plus Markdown artifacts. `miez team build` generates one `miez.generated.yaml` per team, containing:
     - `id`, `version`, `name`, `description`
     - `skills`: each with an `id` and generated source path
-    - `workers`: each with an `id`, `kind: agent`, a generated path to its Markdown file, optional `skills`, `model`, and MCP tools
+    - `workers`: each with an `id`, a generated path to its Markdown file, optional `skills`, `model`, and MCP tools
     - `tasks`: each with an `id`, generated source path, and optional description; tasks render as Copilot prompts
     - `workflows`: each with an `id`, `name`, generated source path, and ordered `phases`, each phase listing the worker ids that participate in it
     - optional `default_model` and `models` (a team-declared list of model ids/mappings, extending or overriding the built-in ones)
@@ -113,7 +115,7 @@ Here is my vision for miez-cli:
         - creates .miez/changes/<change-name>/contract.md which defines the change contract and references the living SRS, including operations and intent when/then scenarios
     - architect -> Analyses the code base critically. For each spec, creates technical design decision, asks the user for decisions, document the decisions, documents the technical implementation appraoch with important techncail details
         - create .miez/changes/<change-name>/design.md
-        - workers are all `kind: agent`; each can use the team's default or its own model
+        - workers are all persistent Copilot agents; each can use the team's default or its own model
     - plan -> Breaks the architects work into clear tasks
         - create .miez/changes/<change-name>/tasks.md
     - user-story -> Creates Jira compatible user-stories out of the tasks.md

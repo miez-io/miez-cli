@@ -40,7 +40,8 @@ func TestBuildRendersCopilotOutputAndLinkedSkills(t *testing.T) {
 		t.Fatalf("task prompt = %q", taskOutput)
 	}
 	workerOutput := string(plan.Files[".github/agents/builder.md"])
-	if !strings.HasPrefix(workerOutput, "---\nmodel: GPT-5 (copilot)\ndescription: Builds implementation prompts.\n---\n\n") {
+	if !strings.Contains(workerOutput, "model: GPT-5 (copilot)\n") ||
+		!strings.Contains(workerOutput, "description: Builds implementation prompts.\n") {
 		t.Fatalf("prompt description frontmatter = %q", workerOutput)
 	}
 	if !strings.Contains(workerOutput, "## Skills") {
@@ -244,11 +245,91 @@ func TestBuildRendersAgentModelFrontmatter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(string(plan.Files[".github/agents/architect.md"]), "---\nmodel: Claude Sonnet 4.5 (copilot)\ndescription: Designs system architecture.\n---\n\n") {
+	workerOutput := string(plan.Files[".github/agents/architect.md"])
+	if !strings.Contains(workerOutput, "model: Claude Sonnet 4.5 (copilot)\n") ||
+		!strings.Contains(workerOutput, "description: Designs system architecture.\n") {
 		t.Fatalf("agent frontmatter = %q", plan.Files[".github/agents/architect.md"])
 	}
-	if !strings.Contains(string(plan.Files[".github/agents/architect.md"]), "description: Designs system architecture.\n") {
+	if !strings.Contains(workerOutput, "description: Designs system architecture.\n") {
 		t.Fatal("agent description is missing")
+	}
+}
+
+func TestBuildPreservesNativeAgentModelSelector(t *testing.T) {
+	root := t.TempDir()
+	workspaceValue, err := workspace.Initialize(root, []string{"copilot"}, "agent-team")
+	if err != nil {
+		t.Fatal(err)
+	}
+	teamRoot := filepath.Join(root, ".miez", "miez_modules", "agent-team")
+	writeCompileAgentTeam(t, teamRoot, "GPT-5.6 Luna (copilot)")
+	team, err := artifacts.LoadTeam(teamRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	plan, err := Build(workspaceValue, team, model.DefaultTeamState(team.Team))
+	if err != nil {
+		t.Fatal(err)
+	}
+	workerOutput := string(plan.Files[".github/agents/architect.md"])
+	if !strings.Contains(workerOutput, "model: GPT-5.6 Luna (copilot)\n") ||
+		!strings.Contains(workerOutput, "description: Designs system architecture.\n") {
+		t.Fatalf("agent frontmatter = %q, want native selector preserved", workerOutput)
+	}
+}
+
+func TestBuildCopiesProviderWorkerFrontmatterAndStripsMiezFields(t *testing.T) {
+	root := t.TempDir()
+	workspaceValue, err := workspace.Initialize(root, []string{"copilot"}, "agent-team")
+	if err != nil {
+		t.Fatal(err)
+	}
+	teamRoot := filepath.Join(root, ".miez", "miez_modules", "agent-team")
+	writeCompileAgentTeam(t, teamRoot, "gpt-5.1")
+	workerPath := filepath.Join(teamRoot, "commands", "architect.md")
+	worker := `---
+name: Source Architect
+description: Source description wins.
+model: gpt-5.1
+reasoning-effort: xhigh
+kind: agent
+skills: [source-skill]
+tools: [github]
+---
+# Architect
+`
+	if err := os.WriteFile(workerPath, []byte(worker), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	team, err := artifacts.LoadTeam(teamRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	plan, err := Build(workspaceValue, team, model.DefaultTeamState(team.Team))
+	if err != nil {
+		t.Fatal(err)
+	}
+	output := string(plan.Files[".github/agents/architect.md"])
+	for _, want := range []string{
+		"name: Source Architect\n",
+		"description: Source description wins.\n",
+		"model: GPT-5.1 (copilot)\n",
+		"reasoning-effort: xhigh\n",
+	} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("agent output = %q, missing provider frontmatter %q", output, want)
+		}
+	}
+	for _, unwanted := range []string{
+		"kind: agent\n",
+		"skills: [source-skill]\n",
+		"tools: [github]\n",
+	} {
+		if strings.Contains(output, unwanted) {
+			t.Fatalf("agent output = %q, retained miez field %q", output, unwanted)
+		}
 	}
 }
 
@@ -321,8 +402,10 @@ func TestBuildHonorsWorkerModelStateOverride(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(string(plan.Files[".github/agents/architect.md"]), "---\nmodel: GPT-5.1 (copilot)\ndescription: Designs system architecture.\n---\n\n") {
-		t.Fatalf("agent frontmatter = %q, want the state override to win over the generated index's model", plan.Files[".github/agents/architect.md"])
+	workerOutput := string(plan.Files[".github/agents/architect.md"])
+	if !strings.Contains(workerOutput, "model: GPT-5.1 (copilot)\n") ||
+		!strings.Contains(workerOutput, "description: Designs system architecture.\n") {
+		t.Fatalf("agent frontmatter = %q, want the state override to win over the generated index's model", workerOutput)
 	}
 }
 

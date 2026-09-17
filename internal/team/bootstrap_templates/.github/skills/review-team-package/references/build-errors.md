@@ -29,9 +29,9 @@ Common `miez team build .` failures, their cause, and the fix.
 | `missing YAML frontmatter` / `unterminated YAML frontmatter` | no `---` block or unclosed | wrap frontmatter in `---` fences |
 | `frontmatter field "id" is not allowed` | leftover `id` from an older package | delete the line; the id comes from the file path |
 | `file name implies id "…", want "…"` | generated catalog disagrees with the file layout | re-run `miez team build .`; never hand-edit the generated file |
-| `invalid frontmatter: field … not found` | unknown key on a worker or workflow — both are strict | remove the key; only documented fields are allowed |
+| `invalid frontmatter: field … not found` | unknown key on a workflow or another strict artifact | remove the key; provider worker header fields are passed through |
 | `duplicate worker id` / `duplicate skill id` / `duplicate workflow id` | two artifacts share an id | make ids unique |
-| `kind "…" is not supported` | invalid, missing, or prompt-only worker kind | use `kind: agent` |
+| `kind "…" is not supported` | an obsolete worker kind has a value other than `agent` | remove the field; workers always render as Copilot agents |
 
 ## References
 

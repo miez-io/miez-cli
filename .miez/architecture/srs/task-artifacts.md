@@ -77,8 +77,8 @@ Acceptance:
 
 - WHEN a worker is rendered THEN its managed output is a selectable Copilot
   custom agent.
-- WHEN a worker source does not declare `kind: agent` THEN the target build
-  rejects it before rendering.
+- WHEN a worker source omits the obsolete `kind` field THEN the target build
+  renders it as a Copilot custom agent.
 
 #### `task/is-a-reusable-work-objective`
 

@@ -1,0 +1,57 @@
+{
+  "Miez worker frontmatter": {
+    "scope": "chatagent",
+    "prefix": "miez-worker",
+    "body": [
+      "---",
+      "name: ${1:Worker name}",
+      "description: ${2:What this worker owns}",
+      "model: ${3:gpt-5}",
+      "reasoning-effort: ${4:xhigh}",
+      "skills: []",
+      "tools: []",
+      "---"
+    ],
+    "description": "Insert a complete miez worker frontmatter block."
+  },
+  "Miez worker name": {
+    "scope": "chatagent",
+    "prefix": "name",
+    "body": "name: ${1:Worker name}",
+    "description": "Set the optional human-readable worker name."
+  },
+  "Miez worker description": {
+    "scope": "chatagent",
+    "prefix": "description",
+    "body": "description: ${1:What this worker owns}",
+    "description": "Set the optional worker description."
+  },
+  "Miez worker model": {
+    "scope": "chatagent",
+    "prefix": "model",
+    "body": "model: ${1:gpt-5}",
+    "description": "Set a miez model id or native Copilot model selector."
+  },
+  "Miez worker skills": {
+    "scope": "chatagent",
+    "prefix": "skills",
+    "body": "skills: [${1:skill-id}]",
+    "description": "Assign reusable miez skills to this worker."
+  },
+  "Miez worker MCP tools": {
+    "scope": "chatagent",
+    "prefix": "tools",
+    "body": "tools: [${1:mcp-id}]",
+    "description": "Reference MCP server ids declared in miez.yaml."
+  },
+  "Miez workflow phases": {
+    "scope": "instructions",
+    "prefix": "phases",
+    "body": [
+      "phases:",
+      "  - id: ${1:phase-id}",
+      "    workers: [${2:worker-id}]"
+    ],
+    "description": "Declare ordered miez workflow phases."
+  }
+}

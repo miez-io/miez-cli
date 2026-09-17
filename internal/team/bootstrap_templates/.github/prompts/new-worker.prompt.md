@@ -10,9 +10,11 @@ First read `miez.yaml` and the existing `workers/` and `skills/` files so the
 new worker does not overlap an existing one. If the requested scope duplicates
 a worker that already exists, say so instead of adding a near-copy.
 
-Use `kind: agent` for the worker. Assign only skills that already exist; if the
-worker needs a procedure that does not exist yet, propose the skill rather than
-inlining the steps into the persona.
+Every worker renders as a Copilot custom agent. Assign only skills that already
+exist; if the worker needs a procedure that does not exist yet, propose the
+skill rather than inlining the steps into the persona. Preserve supported
+Copilot header fields such as `model` and `reasoning-effort` when they are
+useful; miez consumes `skills` and MCP `tools` during compilation.
 
 Do not add the worker to any workflow unless I ask for it.
 

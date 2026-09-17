@@ -48,10 +48,12 @@ Use the other architecture documents for different questions:
 - `artifact/model-catalog-uses-stable-ids`
 - `artifact/markdown-contract-is-enforced`
 - `artifact/frontmatter-declares-cli-configuration`
+- `artifact/worker-frontmatter-is-provider-compatible`
 - `artifact/workflow-artifacts-are-discoverable`
 - `check/validates-team-artifacts`
 - `team-authoring/bootstrap-creates-compatible-skeleton`
 - `team-authoring/bootstrap-includes-guided-authoring-support`
+- `team-authoring/bootstrap-copies-editor-support`
 - `team-authoring/support-files-are-not-operational-artifacts`
 - `team-authoring/installed-source-retains-support-files`
 - `team-authoring/build-produces-installable-package`
@@ -126,6 +128,7 @@ Use the other architecture documents for different questions:
 - `render-contract/github-copilot-is-the-only-render-target`
 - `render-contract/authored-folders-map-to-agents-and-prompts`
 - `render-contract/skills-are-referenced-not-inlined`
+- `render-contract/worker-frontmatter-is-preserved`
 - `render-contract/rules-are-a-separate-always-on-instruction-from-workflow-routing`
 - `render-contract/selected-workflow-is-always-on`
 - `model/stable-identifiers-map-to-copilot-names`
