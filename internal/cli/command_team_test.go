@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -14,78 +16,105 @@ import (
 	"github.com/manuel/miez-cli/internal/workspace"
 )
 
-func TestBootstrapCreatesTeamThatCheckAccepts(t *testing.T) {
+func TestBootstrapCreatesCurrentTeamAuthoringPackage(t *testing.T) {
 	root := t.TempDir()
 	app := newTestApp(t, &bytes.Buffer{}, &bytes.Buffer{}, root)
 
 	if err := app.Execute(context.Background(), []string{"team", "bootstrap", "custom-team"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(root, "custom-team", "miez.generated.yaml")); !os.IsNotExist(err) {
+	teamRoot := filepath.Join(root, "custom-team")
+	expected := []string{
+		".github/instructions/miez-artifact-authoring.instructions.md",
+		".github/prompts/commit.prompt.md",
+		".github/prompts/create-skill.prompt.md",
+		".github/prompts/create-task.prompt.md",
+		".github/prompts/create-worker.prompt.md",
+		".github/prompts/create-workflow.prompt.md",
+		".github/prompts/verify-artifacts.prompt.md",
+		".vscode/miez-team.code-snippets",
+		".vscode/settings.json",
+		"README.md",
+		"miez.yaml",
+		"skills/writing/SKILL.md",
+		"tasks/starter.md",
+		"workers/starter.md",
+		"workflows/default.md",
+	}
+	actual := []string{}
+	if err := filepath.WalkDir(teamRoot, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		relative, err := filepath.Rel(teamRoot, path)
+		if err != nil {
+			return err
+		}
+		actual = append(actual, filepath.ToSlash(relative))
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(expected)
+	sort.Strings(actual)
+	if strings.Join(actual, "\n") != strings.Join(expected, "\n") {
+		t.Fatalf("bootstrap files = %v, want %v", actual, expected)
+	}
+	if _, err := os.Stat(filepath.Join(teamRoot, "miez.generated.yaml")); !os.IsNotExist(err) {
 		t.Fatalf("bootstrap generated the team index before build: %v", err)
 	}
-	for _, relative := range []string{
-		"README.md",
-		".vscode/settings.json",
-		".vscode/miez-team.code-snippets",
-		".github/instructions/miez-team-package.instructions.md",
-		".github/prompts/new-worker.prompt.md",
-		".github/prompts/new-skill.prompt.md",
-		".github/prompts/new-task.prompt.md",
-		".github/prompts/new-workflow.prompt.md",
-		".github/skills/write-workers/SKILL.md",
-		".github/skills/write-workers/assets/worker-template.md",
-		".github/skills/review-team-package/SKILL.md",
-		".github/skills/review-team-package/references/build-errors.md",
-	} {
-		if _, err := os.Stat(filepath.Join(root, "custom-team", filepath.FromSlash(relative))); err != nil {
-			t.Fatalf("bootstrap support file %s is missing: %v", relative, err)
-		}
-	}
-	readme, err := os.ReadFile(filepath.Join(root, "custom-team", "README.md"))
+
+	readme, err := os.ReadFile(filepath.Join(teamRoot, "README.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(readme), "kind: agent") || !strings.Contains(string(readme), "miez.generated.yaml") {
-		t.Fatalf("bootstrap README does not explain the team contract: %q", readme)
-	}
-	if strings.Contains(string(readme), "{{TEAM_ID}}") || !strings.Contains(string(readme), "custom-team") {
+	if !strings.Contains(string(readme), "# custom-team\n") ||
+		!strings.Contains(string(readme), "What Miez CLI means") ||
+		strings.Contains(string(readme), "{{TEAM_ID}}") {
 		t.Fatalf("bootstrap README did not resolve the team id: %q", readme)
 	}
-	starterWorker, err := os.ReadFile(filepath.Join(root, "custom-team", "workers", "starter.md"))
+	starterWorker, err := os.ReadFile(filepath.Join(teamRoot, "workers", "starter.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(starterWorker), "kind: agent") {
-		t.Fatalf("bootstrapped worker still declares obsolete kind: %q", starterWorker)
+	for _, section := range []string{"## Identity", "## Motivation", "## Core goals", "## Core Beliefs", "## Boundaries"} {
+		if !strings.Contains(string(starterWorker), section) {
+			t.Fatalf("bootstrapped worker missing %q: %q", section, starterWorker)
+		}
 	}
-	settings, err := os.ReadFile(filepath.Join(root, "custom-team", ".vscode", "settings.json"))
+	starterTask, err := os.ReadFile(filepath.Join(teamRoot, "tasks", "starter.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(settings), "**/workers/*.md") {
-		t.Fatalf("bootstrapped VS Code settings are incomplete: %q", settings)
+	for _, section := range []string{"## What is the goal", "## What to do", "## What not to do"} {
+		if !strings.Contains(string(starterTask), section) {
+			t.Fatalf("bootstrapped task missing %q: %q", section, starterTask)
+		}
 	}
-	snippets, err := os.ReadFile(filepath.Join(root, "custom-team", ".vscode", "miez-team.code-snippets"))
+	starterSkill, err := os.ReadFile(filepath.Join(teamRoot, "skills", "writing", "SKILL.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(snippets), "miez-worker") {
-		t.Fatalf("bootstrapped VS Code snippets are incomplete: %q", snippets)
+	if !strings.Contains(string(starterSkill), "user-invocable: true") ||
+		!strings.Contains(string(starterSkill), "disable-model-invocation: false") {
+		t.Fatalf("bootstrapped skill is missing invocation frontmatter: %q", starterSkill)
 	}
 	if err := app.Execute(context.Background(), []string{"team", "build", "custom-team"}); err != nil {
 		t.Fatal(err)
 	}
-	generated, err := os.ReadFile(filepath.Join(root, "custom-team", "miez.generated.yaml"))
+	generated, err := os.ReadFile(filepath.Join(teamRoot, "miez.generated.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, unwanted := range []string{".github/", "write-workers", "review-team-package"} {
+	for _, unwanted := range []string{".github/", "software-architect", "write-adr", "analyze-existing-solution"} {
 		if strings.Contains(string(generated), unwanted) {
 			t.Fatalf("generated catalog contains authoring support %q: %q", unwanted, generated)
 		}
 	}
-	team, err := artifacts.LoadTeam(filepath.Join(root, "custom-team"))
+	team, err := artifacts.LoadTeam(teamRoot)
 	if err != nil {
 		t.Fatal(err)
 	}

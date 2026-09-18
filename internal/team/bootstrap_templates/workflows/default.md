@@ -1,9 +1,9 @@
 ---
-name: Default
+name: Workflow Name
 phases:
   - id: work
     workers: [starter]
 ---
-# Default workflow
+# Workflow Name
 
 Describe how the team coordinates this workflow.

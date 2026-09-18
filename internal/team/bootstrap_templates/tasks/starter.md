@@ -1,8 +1,16 @@
 ---
-description: Capture a reusable task objective.
+description: One-sentence task description.
 ---
 
-# Starter task
+## What is the goal
 
-Describe the reusable objective, expected output, constraints, and completion
-checks. Keep this task independent of any worker persona or skill assignment.
+Describe the outcome this task should achieve.
+
+## What to do
+
+- [Instruction or step]
+- [Instruction or step]
+
+## What not to do
+
+- [Constraint, exclusion, or failure mode to avoid]
