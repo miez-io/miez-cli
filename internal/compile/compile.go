@@ -117,19 +117,23 @@ func Build(workspaceValue workspace.Workspace, team artifacts.TeamDir, state mod
 		}
 	}
 
-	workflow, err := state.SelectedWorkflow(team.Team)
-	if err != nil {
-		return Plan{}, err
-	}
-	if !workflow.HasActiveWorker(activeWorkers) {
-		return Plan{}, fmt.Errorf("workflow %q has no enabled workers", workflow.ID)
-	}
-	workflowMarkdown, err := team.ReadWorkflow(workflow)
-	if err != nil {
-		return Plan{}, err
-	}
-	if err := addFile(files, workflowPath(), []byte(renderWorkflow(team.Team, workflow, workflowMarkdown.Body, activeWorkers))); err != nil {
-		return Plan{}, err
+	workflowID := ""
+	if len(team.Team.Workflows) > 0 {
+		workflow, err := state.SelectedWorkflow(team.Team)
+		if err != nil {
+			return Plan{}, err
+		}
+		if !workflow.HasActiveWorker(activeWorkers) {
+			return Plan{}, fmt.Errorf("workflow %q has no enabled workers", workflow.ID)
+		}
+		workflowMarkdown, err := team.ReadWorkflow(workflow)
+		if err != nil {
+			return Plan{}, err
+		}
+		if err := addFile(files, workflowPath(), []byte(renderWorkflow(team.Team, workflow, workflowMarkdown.Body, activeWorkers))); err != nil {
+			return Plan{}, err
+		}
+		workflowID = workflow.ID
 	}
 
 	paths := make([]string, 0, len(files))
@@ -142,7 +146,7 @@ func Build(workspaceValue workspace.Workspace, team artifacts.TeamDir, state mod
 		Summary: Summary{
 			ActiveTeam: team.Team.ID,
 			Targets:    append([]string{}, workspaceValue.Config.Targets...),
-			Workflow:   workflow.ID,
+			Workflow:   workflowID,
 			Files:      paths,
 		},
 	}, nil

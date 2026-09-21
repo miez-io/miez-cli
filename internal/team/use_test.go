@@ -47,6 +47,31 @@ func TestInstallInstallsPublicRepoWithNoCredential(t *testing.T) {
 	}
 }
 
+func TestInstallAllowsTeamWithoutWorkflow(t *testing.T) {
+	fake := newFakeGitHub(t)
+	files := demoTeamFiles("workflowless-team", "Workflowless Team")
+	delete(files, "workflowless-team/workflows/default.md")
+	files["workflowless-team/miez.generated.yaml"] = strings.Replace(
+		files["workflowless-team/miez.generated.yaml"],
+		"workflows:\n  - id: default\n    name: Default\n    path: workflows/default.md\n    phases:\n      - id: build\n        workers: [builder]\n",
+		"workflows: []\n",
+		1,
+	)
+	fake.setTeam("acme", "workflowless-team", "main", "sha1", files)
+	root := t.TempDir()
+	service := newTestService(root, fake, map[string]string{})
+
+	if _, err := service.Install(context.Background(), []string{"copilot"}, "https://github.com/acme/workflowless-team"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(root, ".github", "agents", "builder.md")); err != nil {
+		t.Fatalf("worker output is missing: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, ".github", "instructions", "miez-workflow.instructions.md")); !os.IsNotExist(err) {
+		t.Fatalf("workflow output exists for workflowless team: %v", err)
+	}
+}
+
 func TestInstallRendersAgentDescriptionFromWorkerFrontmatter(t *testing.T) {
 	fake := newFakeGitHub(t)
 	fake.setTeam("acme", "agent-team", "main", "sha1", agentTeamFiles())
