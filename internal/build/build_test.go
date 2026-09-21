@@ -66,6 +66,21 @@ func TestBuildGeneratesDeterministicCatalogFromFrontmatter(t *testing.T) {
 	}
 }
 
+func TestBuildAllowsPackageWithoutWorkflows(t *testing.T) {
+	root := writePackage(t)
+	if err := os.Remove(filepath.Join(root, "workflows", "default.md")); err != nil {
+		t.Fatal(err)
+	}
+
+	plan, err := Build(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Team.Workflows) != 0 {
+		t.Fatalf("workflows = %#v, want none", plan.Team.Workflows)
+	}
+}
+
 func TestBuildOmitsLegacyWorkerKind(t *testing.T) {
 	root := writePackage(t)
 	workerPath := filepath.Join(root, "workers", "builder.md")

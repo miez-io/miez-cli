@@ -91,9 +91,6 @@ func Build(root string) (Plan, error) {
 	if err != nil {
 		return Plan{}, err
 	}
-	if len(team.Workflows) == 0 {
-		return Plan{}, errors.New("team package must contain at least one workflow Markdown file")
-	}
 
 	if err := validate.Package(root, team); err != nil {
 		return Plan{}, err

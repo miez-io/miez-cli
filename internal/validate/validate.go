@@ -92,9 +92,6 @@ func Team(team artifacts.TeamDir) Result {
 	if strings.TrimSpace(team.Team.Name) == "" {
 		result.Issues = append(result.Issues, Issue{Path: manifestPath, Message: "name is required"})
 	}
-	if len(team.Team.Workflows) == 0 {
-		result.Issues = append(result.Issues, Issue{Path: manifestPath, Message: "at least one workflow is required"})
-	}
 
 	declaredSkills := map[string]struct{}{}
 	for index, skill := range team.Team.Skills {
